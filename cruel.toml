@@ -1,0 +1,82 @@
+[metadata]
+title = "PackIt"
+description = "{plugin_description}"
+id = "packit"
+version = "0.1.0"
+version_num = 21
+author = "@shareui"
+app_version = ">=12.10.1"
+sdk_version = ">=1.5.0.0"
+icon = "PackIt/packitlogo.png"
+
+[config]
+target = "plugin"
+builder = "cruel"
+cruel = ["0.1.0", "0.1.0"]
+priority = "app"
+
+[references]
+assets = "PackIt/res/assets"
+strings = "PackIt/res/strings"
+entry = "PackIt/src/python/BasePlugin.py"
+pysrc = "PackIt/src/python"
+
+[requirements.pypi]
+# name = ">=1.2.3" leave string empty to download latest
+
+[requirements.local]
+# name = "relpath/to/file.whl"
+
+[requirements.plugins]
+kotlinsdk = { url = "https://t.me/doctashare", version = "0.1.0" }
+composeshell = { url = "https://t.me/doctashare", version = "0.1.0" }
+
+# builds
+[build.asmrel]
+path = "cruel/builds/asmrel.py"
+build_schema_version = 41
+ref = "asmrel"
+opt = 2
+remove_pymeta = true # randomising: co_filename, co_firstlineno, co_linetable, co_name, co_qualname,
+pycompile = true
+include = ["{pluginname}/**/*"]
+exclude = ["{pluginname}/src/kotlin", "src/kotlin"]
+# write namespace here to avoid import error (only if module exist)
+external_roots = ["android", "androidx", "base_plugin", "client_utils", "com", "de", "elyx", "hook_utils", "importlib", "java", "org", "ui"]
+desc = "Builds the plugin and signs it with the developer's key"
+
+# flags
+# {flagname} = ["full", "short", "desc"] - short and desc are optional
+# usage: cruel make asmrel --full / -short
+[flags.asmrel]
+adbpush = ["adbpush", "a", "Push the output file on connected device"]
+
+[build.asmdbg]
+path = "cruel/builds/asmdbg.py"
+build_schema_version = 41
+ref = "asmdbg"
+opt = 0
+remove_pymeta = false # randomising: co_filename, co_name, co_qualname, co_firstlineno, co_linetable
+pycompile = true
+include = ["{pluginname}/**/*"]
+exclude = ["{pluginname}/src/kotlin", "src/kotlin"]
+# write namespace here to avoid import error (only if module exist)
+external_roots = ["android", "androidx", "base_plugin", "client_utils", "com", "de", "elyx", "hook_utils", "importlib", "java", "org", "ui"]
+desc = "Builds the plugin and without signs it with the developer's key"
+
+[flags.asmdbg]
+adbpush = ["adbpush", "a", "Push the output file on connected device"]
+
+[build.check]
+path = "cruel/builds/check.py"
+build_schema_version = 41
+ref = "check"
+desc = "Checking your project via validation tasks"
+opt = 0
+remove_pymeta = false
+pycompile = false
+include = ["{pluginname}/**/*"]
+exclude = ["{pluginname}/src/kotlin", "src/kotlin"]
+external_roots = ["android", "androidx", "base_plugin", "client_utils", "com", "de", "elyx", "hook_utils", "importlib", "java", "org", "ui"]
+
+[flags.check]

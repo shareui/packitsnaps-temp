@@ -1,0 +1,20 @@
+package org.telegram.messenger;
+
+import org.telegram.tgnet.TLRPC;
+
+public class MediaDataController {
+    public static MediaDataController getInstance(int currentAccount) {
+        return null;
+    }
+
+    public TLRPC.TL_messages_stickerSet getStickerSetByName(String name) {
+        return null;
+    }
+
+    public TLRPC.TL_messages_stickerSet getStickerSetByEmojiOrName(String name) {
+        return null;
+    }
+
+    public void getStickerSet(TLRPC.InputStickerSet inputStickerSet, int type, boolean cacheOnly, Utilities.Callback<TLRPC.TL_messages_stickerSet> callback) {}
+    public void loadStickersByEmojiOrName(String name, boolean isDice, boolean isAnimated) {}
+}

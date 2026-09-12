@@ -1,0 +1,3 @@
+[config]
+structured = true # save dirs scructure
+zstd = 22 # 1-22

@@ -1,0 +1,13 @@
+cruel/local/
+
+# tools/compile
+tools/compile/.gradle/
+tools/compile/.kotlin/
+tools/compile/.idea/
+tools/compile/build/
+tools/compile/**/build/
+tools/compile/local.properties
+tools/compile/**/*.iml
+tools/compile/app/libs/*.jar
+tools/compile/app/src/main/java/*
+!tools/compile/app/src/main/java/.gitkeep
