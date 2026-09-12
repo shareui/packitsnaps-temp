@@ -15,6 +15,13 @@ public class MediaDataController {
         return null;
     }
 
-    public void getStickerSet(TLRPC.InputStickerSet inputStickerSet, int type, boolean cacheOnly, Utilities.Callback<TLRPC.TL_messages_stickerSet> callback) {}
+    public TLRPC.TL_messages_stickerSet getStickerSet(TLRPC.InputStickerSet inputStickerSet, Integer hash, boolean cacheOnly, Utilities.Callback<TLRPC.TL_messages_stickerSet> callback) {
+        return null;
+    }
+
+    public TLRPC.TL_messages_stickerSet getStickerSet(TLRPC.InputStickerSet inputStickerSet, boolean cacheOnly) {
+        return null;
+    }
+
     public void loadStickersByEmojiOrName(String name, boolean isDice, boolean isAnimated) {}
 }

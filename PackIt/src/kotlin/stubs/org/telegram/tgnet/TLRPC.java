@@ -9,9 +9,15 @@ public class TLRPC {
         public String short_name;
     }
 
+    public static class StickerSet {
+        public long id;
+        public String short_name;
+    }
+
     public static class Document {}
 
     public static class TL_messages_stickerSet {
+        public StickerSet set;
         public ArrayList<Document> documents = new ArrayList<>();
     }
 }

@@ -1,7 +1,8 @@
 package org.telegram.messenger;
 
 public class NotificationCenter {
-    public static final int diceStickersDidLoad = 100;
+    public static int diceStickersDidLoad;
+    public static int groupStickersDidLoad;
 
     public interface NotificationCenterDelegate {
         void didReceivedNotification(int id, int account, Object... args);

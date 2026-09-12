@@ -13,10 +13,11 @@ import org.telegram.ui.ActionBar.Theme
 import org.telegram.ui.Components.BackupImageView
 
 object TelegramStickerLoader {
-    private const val MAX_PENDING_REQUESTS = 128
-    private val inflightCallbacks = mutableListOf<Utilities.Callback<TLRPC.TL_messages_stickerSet>>()
-    private val pendingViews = mutableListOf<PendingStickerView>()
+    private const val MAX_PENDING_REQUESTS: Int = 128
+    private val inflightCallbacks: MutableList<Utilities.Callback<TLRPC.TL_messages_stickerSet>> = mutableListOf()
+    private val pendingViews: MutableList<PendingStickerView> = mutableListOf()
     private var isObserverRegistered: Boolean = false
+    private var observerRef: NotificationCenter.NotificationCenterDelegate? = null
 
     private data class PendingStickerView(
         val view: BackupImageView,
@@ -93,6 +94,7 @@ object TelegramStickerLoader {
             set
         )
         clearPlaceholder(view)
+        view.invalidate()
         return true
     }
 
@@ -103,29 +105,38 @@ object TelegramStickerLoader {
 
     private fun ensureObserver() {
         if (isObserverRegistered) return
-        val center = NotificationCenter.getInstance(selectedAccount)
-        center.addObserver(
-            { id, _, args ->
-                if (id == NotificationCenter.diceStickersDidLoad) {
-                    val packName = args.firstOrNull()?.toString()
-                    AndroidUtilities.runOnUIThread { flushPending(packName) }
-                }
-            },
-            NotificationCenter.diceStickersDidLoad
-        )
+        val center = NotificationCenter.getInstance(selectedAccount) ?: return
+        val observer = NotificationCenter.NotificationCenterDelegate { id, _, args ->
+            if (id == NotificationCenter.diceStickersDidLoad) {
+                val packName = args?.firstOrNull()?.toString()
+                AndroidUtilities.runOnUIThread { flushPending(packName) }
+            } else if (id == NotificationCenter.groupStickersDidLoad) {
+                val set = args?.getOrNull(1) as? TLRPC.TL_messages_stickerSet
+                val packName = set?.set?.short_name
+                AndroidUtilities.runOnUIThread { flushPending(packName) }
+            }
+        }
+        observerRef = observer
+        center.addObserver(observer, NotificationCenter.diceStickersDidLoad)
+        center.addObserver(observer, NotificationCenter.groupStickersDidLoad)
         isObserverRegistered = true
     }
 
     private fun flushPending(packName: String?) {
         val remaining = mutableListOf<PendingStickerView>()
         for (item in pendingViews) {
-            if (packName != null && item.pack != packName) {
+            if (packName != null && !item.pack.equals(packName, ignoreCase = true)) {
                 remaining.add(item)
+                continue
+            }
+            if (!isTagMatching(item.view, buildTag(item.pack, item.index))) {
                 continue
             }
             val set = resolveFromCache(item.pack)
             val success = bindDocument(item.view, set, item.index, item.sizeDp)
-            if (!success) remaining.add(item)
+            if (!success) {
+                remaining.add(item)
+            }
         }
         pendingViews.clear()
         pendingViews.addAll(remaining)
@@ -137,6 +148,11 @@ object TelegramStickerLoader {
         val pack = parsed.first
         val index = parsed.second
         val expectedTag = buildTag(pack, index)
+
+        val isSameTag = view.tag?.toString() == expectedTag
+        if (isSameTag && view.background != null) {
+            return
+        }
 
         view.tag = expectedTag
 
@@ -151,7 +167,9 @@ object TelegramStickerLoader {
             short_name = pack
         }
 
-        val callback = Utilities.Callback<TLRPC.TL_messages_stickerSet> { loadedSet ->
+        lateinit var callback: Utilities.Callback<TLRPC.TL_messages_stickerSet>
+        callback = Utilities.Callback<TLRPC.TL_messages_stickerSet> { loadedSet ->
+            inflightCallbacks.remove(callback)
             AndroidUtilities.runOnUIThread {
                 if (isTagMatching(view, expectedTag)) {
                     bindDocument(view, loadedSet, index, sizeDp)
@@ -164,15 +182,19 @@ object TelegramStickerLoader {
             inflightCallbacks.removeAt(0)
         }
 
+        pendingViews.add(PendingStickerView(view, pack, index, sizeDp))
+        if (pendingViews.size > MAX_PENDING_REQUESTS) {
+            pendingViews.removeAt(0)
+        }
+        ensureObserver()
+
         try {
-            getMediaController().getStickerSet(inputSet, 0, false, callback)
+            val directSet = getMediaController().getStickerSet(inputSet, 0, false, callback)
+            if (directSet != null) {
+                bindDocument(view, directSet, index, sizeDp)
+            }
         } catch (_: Throwable) {
             getMediaController().loadStickersByEmojiOrName(pack, false, true)
-            pendingViews.add(PendingStickerView(view, pack, index, sizeDp))
-            if (pendingViews.size > MAX_PENDING_REQUESTS) {
-                pendingViews.removeAt(0)
-            }
-            ensureObserver()
         }
     }
 }
