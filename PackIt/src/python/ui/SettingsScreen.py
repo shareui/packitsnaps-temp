@@ -1,5 +1,5 @@
 # pyright: reportMissingImports=false
-from android_utils import log
+from packutil import logx
 from ui.bulletin import BulletinHelper
 from ..core.DexLoader import getComposeDexPath, getCoreLoader, ensureReadOnly, getAssetsDir
 
@@ -8,20 +8,20 @@ def openSettingsScreen(parentFragment=None, title: str = "PackIt") -> bool:
         from ElyxPlugins.composeshell import ComposeFragment
     except ImportError:
         BulletinHelper.show_error("ComposeShell plugin is required to display settings")
-        log("[ktpackit] ComposeShell plugin not found")
+        logx("ComposeShell plugin not found", isDebug=False)
         return False
 
     composeDex = getComposeDexPath()
     if not composeDex.exists():
         BulletinHelper.show_error("Compose.dex not found in assets")
-        log(f"[ktpackit] Compose.dex not found at {composeDex}")
+        logx(f"Compose.dex not found at {composeDex}", isDebug=False)
         return False
 
     ensureReadOnly(composeDex)
     coreLoader = getCoreLoader()
     if coreLoader is None:
         BulletinHelper.show_error("Failed to initialize Core.dex")
-        log("[ktpackit] coreLoader is None")
+        logx("coreLoader is None", isDebug=False)
         return False
 
     try:
@@ -36,5 +36,5 @@ def openSettingsScreen(parentFragment=None, title: str = "PackIt") -> bool:
         return True
     except Exception as e:
         BulletinHelper.show_error(f"Error opening settings: {e}")
-        log(f"[ktpackit] failed to open ComposeFragment: {e}")
+        logx(f"failed to open ComposeFragment: {e}", isDebug=False)
         return False

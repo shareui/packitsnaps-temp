@@ -11,6 +11,7 @@ import org.telegram.messenger.Utilities
 import org.telegram.tgnet.TLRPC
 import org.telegram.ui.ActionBar.Theme
 import org.telegram.ui.Components.BackupImageView
+import sh.packit.core.utils.Logx
 
 object TelegramStickerLoader {
     private const val MAX_PENDING_REQUESTS: Int = 128
@@ -82,7 +83,8 @@ object TelegramStickerLoader {
             DocumentObject.getSvgThumb(doc, Theme.key_emptyListPlaceholder, 0.2f)?.also {
                 it.overrideWidthAndHeight(512, 512)
             }
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            Logx.logx("svgThumb error: $e", isDebug = false)
             null
         }
 
@@ -193,7 +195,8 @@ object TelegramStickerLoader {
             if (directSet != null) {
                 bindDocument(view, directSet, index, sizeDp)
             }
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            Logx.logx("getStickerSet failed, falling back: $e", isDebug = false)
             getMediaController().loadStickersByEmojiOrName(pack, false, true)
         }
     }

@@ -3,6 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import compile_core
 import compile_compose
+import compile_packitutils
 
 def before_validate_cruel(cfg_path, buildlog):
     try:
@@ -48,7 +49,7 @@ def after_validate_pypi(cfg_path, cruel_bin, buildlog, cache):
 
 def before_validate_whl(cfg_path, buildlog):
     try:
-        return True
+        return compile_packitutils.build_packutil(cfg_path, buildlog)
     except Exception as e:
         print(f'{e}')
         return False
@@ -175,6 +176,7 @@ def after_link_sections(temp_dir, metadata, build_name, buildlog, cruel_bin):
         project_root = Path(__file__).resolve().parent.parent.parent.parent
         compile_core.clean_core_dex(project_root, buildlog)
         compile_compose.clean_compose_dex(project_root, buildlog)
+        compile_packitutils.clean_packutil(project_root, buildlog)
         return True
     except Exception as e:
         print(f'{e}')
@@ -206,6 +208,7 @@ def on_sigkill(buildlog):
         project_root = Path(__file__).resolve().parent.parent.parent.parent
         compile_core.clean_core_dex(project_root, buildlog)
         compile_compose.clean_compose_dex(project_root, buildlog)
+        compile_packitutils.clean_packutil(project_root, buildlog)
         return True
     except Exception as e:
         print(f'{e}')

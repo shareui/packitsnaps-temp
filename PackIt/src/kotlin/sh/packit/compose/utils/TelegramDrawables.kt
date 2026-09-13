@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import sh.packit.core.utils.Logx
 
 object TelegramDrawables {
     private val idCache = mutableMapOf<String, Int>()
@@ -20,11 +21,14 @@ object TelegramDrawables {
             try {
                 val resId = context.resources.getIdentifier(name, "drawable", context.packageName)
                 if (resId != 0) return@getOrPut resId
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Logx.logx("getIdentifier failed for $name: $e", isDebug = false)
+            }
             try {
                 val clazz = Class.forName("org.telegram.messenger.R")
                 clazz.getField(name).getInt(null)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Logx.logx("R field lookup failed for $name: $e", isDebug = false)
                 0
             }
         }
@@ -35,7 +39,8 @@ object TelegramDrawables {
         if (id == 0) return null
         return try {
             ContextCompat.getDrawable(context, id)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logx.logx("getDrawable by id failed for $name: $e", isDebug = false)
             null
         }
     }
@@ -44,7 +49,8 @@ object TelegramDrawables {
         if (resId == 0) return null
         return try {
             ContextCompat.getDrawable(context, resId)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Logx.logx("getDrawable by resId failed for $resId: $e", isDebug = false)
             null
         }
     }

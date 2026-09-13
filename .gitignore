@@ -11,3 +11,4 @@ tools/compile/**/*.iml
 tools/compile/app/libs/*.jar
 tools/compile/app/src/main/java/*
 !tools/compile/app/src/main/java/.gitkeep
+**/__pycache__/

@@ -1,6 +1,7 @@
 package sh.packit.core.info
 
 import android.content.Context
+import sh.packit.core.utils.Logx
 
 object ClientInfo {
     private const val EXTERA_PACKAGE: String = "com.exteragram.messenger"
@@ -25,7 +26,8 @@ object ClientInfo {
             val pm = context.packageManager
             val info = pm.getPackageInfo(context.packageName, 0)
             info.versionName ?: ""
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            Logx.logx("getClientVersion error: $e", isDebug = false)
             ""
         }
     }

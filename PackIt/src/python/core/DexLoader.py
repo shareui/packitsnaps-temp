@@ -4,7 +4,7 @@ import stat
 import threading
 from pathlib import Path
 from cruel import get_assets_dir
-from android_utils import log
+from packutil import logx
 
 _lock = threading.Lock()
 _coreLoader = None
@@ -25,7 +25,7 @@ def ensureReadOnly(dexPath: Path):
         try:
             os.chmod(str(dexPath), stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
         except Exception as e:
-            log(f"[ktpackit] chmod error for {dexPath.name}: {e}")
+            logx(f"chmod error for {dexPath.name}: {e}", isDebug=False)
 
 def callStatic(cls, methodName: str, *args):
     argCount = len(args)
@@ -42,7 +42,7 @@ def callStatic(cls, methodName: str, *args):
                 if m.getName() == methodName and len(m.getParameterTypes()) == argCount:
                     return m.invoke(instance, *args)
     except Exception as e:
-        log(f"[ktpackit] singleton fallback error: {e}")
+        logx(f"singleton fallback error: {e}", isDebug=False)
     raise AttributeError(f"method {methodName} with {argCount} args not found on {cls}")
 
 def hasAncestor(loader, target):
@@ -61,7 +61,7 @@ def getComposeShellLoader(context=None):
         from ElyxPlugins.composeshell import get_compose_loader
         return get_compose_loader(context)
     except Exception as e:
-        log(f"[ktpackit] getComposeShellLoader error: {e}")
+        logx(f"getComposeShellLoader error: {e}", isDebug=False)
         return None
 
 def initCoreState(loader):
@@ -69,9 +69,9 @@ def initCoreState(loader):
         cls = loader.loadClass("sh.packit.core.state.CoreState")
         _loadedClasses["sh.packit.core.state.CoreState"] = cls
         callStatic(cls, "markCoreReady")
-        log("[ktpackit] CoreState marked ready")
+        logx("CoreState marked ready", isDebug=True)
     except Exception as e:
-        log(f"[ktpackit] initCoreState error: {e}")
+        logx(f"initCoreState error: {e}", isDebug=False)
 
 def getCoreLoader(context=None, parentLoader=None):
     global _coreLoader
@@ -85,7 +85,7 @@ def getCoreLoader(context=None, parentLoader=None):
 
         if _coreLoader is not None:
             if composeLoader is not None and not hasAncestor(_coreLoader, composeLoader):
-                log("[ktpackit] resetting _coreLoader to chain composeLoader")
+                logx("resetting _coreLoader to chain composeLoader", isDebug=True)
                 _coreLoader = None
                 _loadedClasses.clear()
             else:
@@ -93,17 +93,17 @@ def getCoreLoader(context=None, parentLoader=None):
 
         coreDex = getCoreDexPath()
         if not coreDex.exists():
-            log(f"[ktpackit] Core.dex not found at {coreDex}")
+            logx(f"Core.dex not found at {coreDex}", isDebug=False)
             return None
         ensureReadOnly(coreDex)
 
         try:
             from dalvik.system import DelegateLastClassLoader
             _coreLoader = DelegateLastClassLoader(str(coreDex.absolute()), desiredParent)
-            log(f"[ktpackit] successfully initialized Core.dex loader")
+            logx("successfully initialized Core.dex loader", isDebug=True)
             initCoreState(_coreLoader)
         except Exception as e:
-            log(f"[ktpackit] failed to initialize DelegateLastClassLoader: {e}")
+            logx(f"failed to initialize DelegateLastClassLoader: {e}", isDebug=False)
             return None
         return _coreLoader
 
@@ -119,7 +119,7 @@ def loadCoreClass(className: str, context=None):
         _loadedClasses[className] = cls
         return cls
     except Exception as e:
-        log(f"[ktpackit] failed to load class {className}: {e}")
+        logx(f"failed to load class {className}: {e}", isDebug=False)
         return None
 
 def resetLoaders():

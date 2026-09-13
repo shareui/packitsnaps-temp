@@ -1,0 +1,187 @@
+# Contributing Guidelines for PackIt
+
+## Logging with `logx`
+
+PackIt uses a unified logging system across both Python and Kotlin codebases. The `[packit]` prefix is attached automatically by the logger — do not add it manually in message strings.
+
+### Severity Rules
+
+- All errors and exceptions are ALWAYS non-debug (isDebug = false).
+- Everything that is not an error (lifecycle, tracing, state changes) is ALWAYS debug (isDebug = true).
+
+### Exception Handling Rules
+
+- **NEVER leave empty catch blocks or swallow exceptions silently** (e.g. `catch (_: Throwable) {}` or `except Exception: pass`).
+- Every caught exception must at minimum be logged with `isDebug = false`.
+
+---
+
+### Usage in Python
+
+Import `logx` from `packutil`:
+
+```python
+from packutil import logx
+
+# non-error
+logx("plugin loaded successfully", isDebug=True)
+logx("CoreState marked ready", isDebug=True)
+
+# errors and exceptions
+try: initDangerousOperation()
+except Exception as e: logx(f"operation failed: {e}", isDebug=False)
+```
+
+---
+
+### Usage in Kotlin
+
+Import `Logx` from `sh.packit.core.utils`:
+
+```kotlin
+import sh.packit.core.utils.Logx
+
+// non-error events
+Logx.logx("ComposeEntry.createView started", isDebug = true)
+Logx.logx("Sticker loaded successfully", isDebug = true)
+
+// errors and exceptions
+try { performAction()
+} catch (e: Throwable) { Logx.logx("performAction failed: $e", isDebug = false) }
+```
+
+---
+
+### Settings & Output
+
+- `debug_logs`: Controls whether `isDebug = true` messages are emitted
+- `write_logs`: Controls whether messages are written to `<filesDir>/packit/var/logs/latest.txt` (symlinked to active session `<filesDir>/packit/var/logs/history/{YY:MM:DD}-{HH:MM:SS}.txt`)
+
+---
+
+## Accessing `sh.packit..` Classes Across Runtimes and Dexes
+
+PackIt is split across multiple components:
+- `Core.dex`: houses core state, bridges, sticker loaders, and utilities (`sh.packit.core.*`).
+- `Compose.dex`: houses Jetpack Compose UI screens, activities, and components (`sh.packit.compose.*`).
+- Python layer: loads dex files and orchestrates plugin lifecycle.
+
+### 1. From Python
+
+Use `loadCoreClass` and `callStatic` from `core.DexLoader`:
+
+```python
+from .core.DexLoader import loadCoreClass, callStatic
+
+# Load class by qualified name
+coreCls = loadCoreClass("sh.packit.core.state.CoreState")
+if coreCls is not None:
+    # callStatic handles both @JvmStatic methods and Kotlin `object` singletons (via INSTANCE)
+    callStatic(coreCls, "markCoreReady")
+
+# Example: show restart bulletin
+restartCls = loadCoreClass("sh.packit.core.ui.RestartRequired")
+if restartCls is not None:
+    callStatic(restartCls, "show", "Client restart required", "Restart")
+```
+
+---
+
+### 2. In Kotlin from Another Dex
+
+#### Safety Rules & Android ART Pitfalls
+
+- **Direct static imports are NOT automatically safe across dex files.**
+- If you directly import and call a class that has not been loaded into the ClassLoader hierarchy yet, Android ART will fail bytecode verification and throw **`java.lang.NoClassDefFoundError`**.
+- Note: `NoClassDefFoundError` is a subclass of `java.lang.Error`, **NOT `java.lang.Exception`**. If you catch only `Exception`, the app **will crash**!
+- Always catch `Throwable` when dealing with cross-dex boundary calls.
+
+#### When Direct Imports ARE Safe
+
+Direct imports are safe **only when calling from child to parent in a chained ClassLoader hierarchy where the parent is already initialized**:
+- Example: `Compose.dex` is loaded with `parent_loader = coreLoader`. Since `Core.dex` is already loaded before `ComposeFragment` is opened, classes in `Compose.dex` can directly import `sh.packit.core.*`:
+
+```kotlin
+import sh.packit.core.state.CoreState
+
+// Safe: Compose.dex -> Core.dex (child delegates to already loaded parent)
+CoreState.markComposeReady()
+val pluginId = CoreState.PLUGIN_ID
+```
+
+#### When Direct Imports are DANGEROUS
+
+- **Calling from `Core.dex` into `Compose.dex`**: `Core.dex` loads on app startup. `Compose.dex` is only loaded later when settings are opened. If `Core.dex` had a direct import like `import sh.packit.compose.ComposeEntry`, it would immediately crash on plugin startup with `NoClassDefFoundError`!
+- **Optional/Conditional Plugins**: If a plugin or dex might not be present (e.g. `ComposeShell` not installed).
+
+#### 3 Safe Patterns for Cross-Dex Communication
+
+##### Pattern 1: Interface / Service Provider Registry (Recommended for high performance)
+Define a common interface in the parent dex (`Core.dex`), and let the child dex register its implementation when it loads:
+
+```kotlin
+// In Core.dex (Parent):
+interface ComposeBridge {
+    fun openSettings(context: Context)
+}
+
+object CoreState {
+    var composeBridge: ComposeBridge? = null
+}
+
+// In Compose.dex (Child):
+class ComposeBridgeImpl : ComposeBridge {
+    override fun openSettings(context: Context) { ... }
+}
+
+// When Compose.dex loads (e.g. ComposeEntry):
+CoreState.composeBridge = ComposeBridgeImpl()
+
+// In Core.dex (caller):
+// 100% safe, zero reflection, zero risk of NoClassDefFoundError:
+CoreState.composeBridge?.openSettings(context)
+```
+
+##### Pattern 2: Isolated Bridge Class (Lazy Class Verification)
+Android ART verifies and resolves classes lazily upon executing the method that references them. If you isolate direct imports in a separate class, that class won't be loaded until invoked:
+
+```kotlin
+// Isolated helper in a separate file:
+object ComposeLazyBridge {
+    fun run() {
+        // Direct import of ComposeEntry is only resolved when run() is called
+        ComposeEntry.init()
+    }
+}
+
+// Caller checks readiness first:
+if (CoreState.isComposeReady()) {
+    try {
+        ComposeLazyBridge.run()
+    } catch (e: Throwable) { // MUST catch Throwable, not Exception!
+        Logx.logx("Failed to invoke ComposeLazyBridge: $e", isDebug = false)
+    }
+}
+```
+
+##### Pattern 3: Dynamic Class Loading (Across Independent ClassLoaders)
+If two dexes are not in a parent-child relationship, load classes dynamically via `ClassLoader`:
+
+```kotlin
+try {
+    // 1. Resolve class using target ClassLoader
+    val classLoader: ClassLoader = targetClassLoader
+    val clazz: Class<*> = Class.forName("sh.packit.core.ui.RestartRequired", true, classLoader)
+
+    // 2. Call @JvmStatic or static method:
+    val method = clazz.getMethod("show")
+    method.invoke(null)
+
+    // 3. Or access Kotlin `object` singleton via INSTANCE field:
+    val instanceField = clazz.getField("INSTANCE")
+    val singleton = instanceField.get(null)
+} catch (e: Throwable) { // Catch Throwable to handle ClassNotFoundException and LinkageError
+    Logx.logx("Dynamic cross-dex call failed: $e", isDebug = false)
+}
+```
+
