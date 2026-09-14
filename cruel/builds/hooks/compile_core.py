@@ -186,7 +186,10 @@ def build_core_dex(project_root, buildlog, cache=None, cruel_bin=None) -> bool:
 
     # calculate digests
     core_digest = _hash_dir(core_src, '*.kt')
-    stubs_digest = _hash_dir(stubs_src, '*.java')
+    stubs_java_digest = _hash_dir(stubs_src, '*.java')
+    stubs_kt_files = sorted(p for p in stubs_src.rglob('*.kt') if 'composeshell' not in p.parts)
+    stubs_kt_digest = hashlib.sha256('|'.join(f'{p.relative_to(stubs_src).as_posix()}:{_hash_file(p)}' for p in stubs_kt_files).encode('utf-8')).hexdigest()[:16]
+    stubs_digest = f'{stubs_java_digest}::{stubs_kt_digest}'
     total_digest = f'{core_digest}::{stubs_digest}'
 
     manifest_path = cache_dir / 'manifest.json'
@@ -222,7 +225,7 @@ def build_core_dex(project_root, buildlog, cache=None, cruel_bin=None) -> bool:
             dex_classes_dir.mkdir(parents=True, exist_ok=True)
             merge_dir.mkdir(parents=True, exist_ok=True)
 
-            # 1. compile stubs with javac if changed
+            # 1. compile stubs with javac and kotlinc if changed
             stubs_cached_digest = manifest.get('stubs_digest')
             if not stubs_classes_dir.is_dir() or stubs_cached_digest != stubs_digest:
                 if stubs_classes_dir.exists():
@@ -235,6 +238,19 @@ def build_core_dex(project_root, buildlog, cache=None, cruel_bin=None) -> bool:
                     res = subprocess.run(javac_cmd, capture_output=True, text=True)
                     if res.returncode != 0:
                         buildlog.error(f'javac stubs compilation failed: {res.stderr.strip()}')
+                        return False
+                if stubs_kt_files:
+                    buildlog.info(f'  compiling {len(stubs_kt_files)} stub kotlin files with kotlinc')
+                    kotlinc_stub_cmd = [
+                        deps['kotlinc'],
+                        '-jvm-target', '1.8',
+                        '-classpath', f"{deps['android_jar']}:{stubs_classes_dir}",
+                        '-d', str(stubs_classes_dir),
+                        *(str(p) for p in stubs_kt_files),
+                    ]
+                    res = subprocess.run(kotlinc_stub_cmd, capture_output=True, text=True)
+                    if res.returncode != 0:
+                        buildlog.error(f'kotlinc stubs compilation failed: {res.stderr.strip()}')
                         return False
             t.progress(25)
 
