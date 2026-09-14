@@ -1,0 +1,27 @@
+plugin_description: |-
+  **Ein Ressourcenkatalog für exteraGram/AyuGram. Plugins, Symbolpakete – alles an einem Ort, mit Unterstützung für mehrere Repositories.**
+
+  Quellcode:
+plugin_subtitle: "Ressourcenkatalog für exteraGram"
+packit: "PackIt"
+plugins_header: "Kategorien"
+install_plugin: "Plugin-Katalog"
+install_plugin_sub: "Erweiterungen herunterladen"
+install_icons: "Icon-Katalog"
+install_icons_sub: "Eigene Icon-Pakete"
+check_updates: "Suchen Sie nach Updates"
+check_updates_sub: "Nach Plugin-Updates suchen"
+settings_header: "Andere"
+deeplinks: "Deeplinks"
+repositories: "Repositories"
+profile: "Profil"
+utilities: "Dienstprogramme"
+other_settings: "Einstellungen"
+community_header: "Gemeinschaft"
+packit_channel: "PackIt-Kanal"
+packit_forum: "Packit-Forum"
+source_code: "Quellcode"
+links_docs: "Links und Dokumentation"
+contributors: "Mitwirkende"
+restart_required: "Client-Neustart erforderlich"
+restart_button: "Neustart"

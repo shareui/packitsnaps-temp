@@ -1,5 +1,6 @@
 package sh.packit.compose.components
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,20 +16,11 @@ import de.shareui.composeshell.TelegramColors
 @Composable
 fun SettingsCard(
     modifier: Modifier = Modifier,
-    cornerRadius: Dp = 16.dp,
+    cornerRadius: Dp = 24.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val shape = RoundedCornerShape(cornerRadius)
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape),
-        shape = shape,
-        color = TelegramColors.DEFAULT_PLUGINSETTINGS_CELL_BG
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            content = content
-        )
+    ExpressiveSettingsGroup(modifier = modifier) {
+        Column(modifier = Modifier.fillMaxWidth(), content = content)
     }
 }
+

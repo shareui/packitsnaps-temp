@@ -12,7 +12,10 @@ import kotlin.system.exitProcess
 
 object RestartRequired {
     private fun restartApp() {
-        val context: Context = ApplicationLoader.applicationContext ?: return
+        val context: Context = ApplicationLoader.applicationContext ?: run {
+            Logx.logx("restartApp context is null", isDebug = false)
+            return
+        }
         try {
             val packageManager = context.packageManager
             val intent: Intent? = packageManager.getLaunchIntentForPackage(context.packageName)
@@ -21,6 +24,8 @@ object RestartRequired {
                 val restartIntent = Intent.makeRestartActivityTask(componentName)
                 restartIntent.setPackage(context.packageName)
                 context.startActivity(restartIntent)
+            } else {
+                Logx.logx("restartApp componentName is null", isDebug = false)
             }
         } catch (e: Throwable) {
             Logx.logx("restartApp launch intent error: $e", isDebug = false)
@@ -42,22 +47,77 @@ object RestartRequired {
             val field = rRawCls.getField("info")
             field.getInt(null)
         } catch (e: Throwable) {
-            Logx.logx("failed to resolve R.raw.info: $e", isDebug = true)
+            Logx.logx("failed to resolve R.raw.info: $e", isDebug = false)
             0
         }
     }
 
     private fun resolveString(key: String, fallback: String): String {
         return try {
-            val stringsCls: Class<*> = Class.forName("de.shareui.exterasdk.localization.Strings")
-            val ofMethod = stringsCls.getMethod("of", String::class.java)
-            val stringsObj = ofMethod.invoke(null, "packit")
-            val getMethod = stringsCls.getMethod("get", String::class.java, String::class.java)
-            getMethod.invoke(stringsObj, key, fallback) as? String ?: fallback
+            de.shareui.exterasdk.localization.Strings.of("packit").get(key, fallback)
         } catch (e: Throwable) {
-            Logx.logx("resolveString notice: $e", isDebug = true)
+            Logx.logx("resolveString notice: $e", isDebug = false)
             fallback
         }
+    }
+
+    private fun getActiveFragment(): org.telegram.ui.ActionBar.BaseFragment? {
+        return try {
+            val cls = Class.forName("org.telegram.ui.LaunchActivity")
+            val getSafe = cls.getMethod("getSafeLastFragment")
+            val safe = getSafe.invoke(null) as? org.telegram.ui.ActionBar.BaseFragment
+            safe ?: (cls.getMethod("getLastFragment").invoke(null) as? org.telegram.ui.ActionBar.BaseFragment)
+        } catch (e: Throwable) {
+            Logx.logx("getActiveFragment error: $e", isDebug = false)
+            null
+        }
+    }
+
+    private fun scheduleShow(text: String, buttonText: String, delayMs: Long, attempt: Int) {
+        AndroidUtilities.runOnUIThread({
+            try {
+                val fragment: org.telegram.ui.ActionBar.BaseFragment? = getActiveFragment()
+                val hasVisibleDialog: Boolean = fragment?.visibleDialog != null
+                val factory: BulletinFactory = if (fragment != null && !hasVisibleDialog && BulletinFactory.canShowBulletin(fragment)) {
+                    BulletinFactory.of(fragment)
+                } else {
+                    BulletinFactory.global()
+                }
+
+                val iconId: Int = getInfoIconId()
+                val bulletin = factory.createSimpleBulletin(
+                    iconId,
+                    text,
+                    buttonText,
+                    5000,
+                    Runnable { restartApp() }
+                )
+                if (bulletin != null) {
+                    bulletin.show()
+                    Logx.logx("RestartRequired bulletin displayed successfully", isDebug = false)
+                    return@runOnUIThread
+                }
+
+                if (attempt < 15) {
+                    Logx.logx("RestartRequired bulletin is null on attempt $attempt, retrying", isDebug = false)
+                    scheduleShow(text, buttonText, 400L, attempt + 1)
+                } else {
+                    Logx.logx("RestartRequired failed after 15 attempts: bulletin null", isDebug = false)
+                }
+            } catch (e: Throwable) {
+                Logx.logx("RestartRequired show error on attempt $attempt: $e", isDebug = false)
+                if (attempt < 15) {
+                    scheduleShow(text, buttonText, 400L, attempt + 1)
+                } else {
+                    Logx.logx("RestartRequired retries exhausted with error: $e", isDebug = false)
+                }
+            }
+        }, delayMs)
+    }
+
+    @JvmStatic
+    fun restart() {
+        restartApp()
     }
 
     @JvmStatic
@@ -67,21 +127,6 @@ object RestartRequired {
         buttonText: String = resolveString("restart_button", "Restart"),
         delayMs: Long = 1200L
     ) {
-        AndroidUtilities.runOnUIThread({
-            try {
-                val factory: BulletinFactory = BulletinFactory.global()
-                val iconId: Int = getInfoIconId()
-                factory.createSimpleBulletin(
-                    iconId,
-                    text,
-                    buttonText,
-                    5000,
-                    Runnable { restartApp() }
-                ).show()
-                Logx.logx("RestartRequired bulletin displayed", isDebug = true)
-            } catch (e: Throwable) {
-                Logx.logx("RestartRequired show error: $e", isDebug = false)
-            }
-        }, delayMs)
+        scheduleShow(text, buttonText, delayMs, 0)
     }
 }

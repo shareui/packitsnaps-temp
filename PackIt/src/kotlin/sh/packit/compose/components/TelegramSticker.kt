@@ -1,10 +1,14 @@
 package sh.packit.compose.components
 
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.Dp
@@ -24,8 +28,13 @@ fun TelegramSticker(
     onLongClick: (() -> Unit)? = null
 ) {
     val cornerShape = RoundedCornerShape(roundRadiusDp)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
     val clickModifier = if (onClick != null || onLongClick != null) {
         Modifier.combinedClickable(
+            interactionSource = interactionSource,
+            indication = null,
             onClick = { onClick?.invoke() },
             onLongClick = { onLongClick?.invoke() }
         )
@@ -36,6 +45,7 @@ fun TelegramSticker(
     Box(
         modifier = modifier
             .size(sizeDp)
+            .expressiveScale(isPressed = isPressed, targetScale = 0.92f)
             .clip(cornerShape)
             .then(clickModifier)
     ) {

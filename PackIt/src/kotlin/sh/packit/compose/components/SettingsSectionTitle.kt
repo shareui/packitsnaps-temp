@@ -16,11 +16,12 @@ fun SettingsSectionTitle(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = title.uppercase(),
-        modifier = modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 8.dp),
+        text = title,
         color = TelegramColors.windowBackgroundWhiteBlueHeader,
         fontSize = 13.sp,
-        fontWeight = FontWeight.SemiBold,
-        style = MaterialTheme.typography.labelMedium
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.5.sp,
+        style = MaterialTheme.typography.labelLarge,
+        modifier = modifier.padding(start = 12.dp, top = 20.dp, bottom = 8.dp)
     )
 }

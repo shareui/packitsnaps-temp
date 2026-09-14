@@ -1,3 +1,7 @@
 package org.telegram.ui.ActionBar;
 
-public class BaseFragment {}
+import android.app.Dialog;
+
+public class BaseFragment {
+    public Dialog visibleDialog;
+}

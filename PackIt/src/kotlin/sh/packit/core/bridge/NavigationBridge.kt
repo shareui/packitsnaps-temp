@@ -1,9 +1,7 @@
 package sh.packit.core.bridge
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import sh.packit.core.utils.Logx
+import sh.packit.core.utils.OpenUrl
 
 object NavigationBridge {
     const val URL_CHANNEL: String = "https://t.me/shareui"
@@ -12,14 +10,6 @@ object NavigationBridge {
 
     @JvmStatic
     fun openUrl(context: Context, url: String) {
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-            Logx.logx("Opened URL: $url", isDebug = true)
-        } catch (e: Throwable) {
-            Logx.logx("Failed to open URL $url: $e", isDebug = false)
-        }
+        OpenUrl.openUrlInApp(context, url)
     }
 }
