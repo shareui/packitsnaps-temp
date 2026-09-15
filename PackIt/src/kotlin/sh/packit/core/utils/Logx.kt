@@ -17,6 +17,14 @@ object Logx {
     private val writeLock: Any = Any()
     @Volatile
     private var activeLogFile: File? = null
+    @Volatile
+    var isDebugEnabled: Boolean = true
+    @Volatile
+    var isWriteLogsEnabled: Boolean = false
+
+    init {
+        reloadConfig()
+    }
 
     private fun getContext(): Context? {
         return try {
@@ -88,36 +96,33 @@ object Logx {
         return initLogSession()
     }
 
-    private fun isWriteLogsEnabled(): Boolean {
-        val pluginsDir: String = getPluginsDir() ?: return false
-        return try {
+    @JvmStatic
+    fun reloadConfig() {
+        val pluginsDir: String = getPluginsDir() ?: return
+        try {
             val file = File(pluginsDir, "plugin_settings.json")
-            if (!file.exists()) return false
+            if (!file.exists()) {
+                isDebugEnabled = true
+                isWriteLogsEnabled = false
+                return
+            }
             val json = JSONObject(file.readText())
             val pluginObj: JSONObject? = json.optJSONObject("packit") ?: json.optJSONObject("shareui_packit")
-            pluginObj?.optBoolean("write_logs", false) ?: false
+            isDebugEnabled = pluginObj?.optBoolean("debug_logs", true) ?: true
+            isWriteLogsEnabled = pluginObj?.optBoolean("write_logs", false) ?: false
         } catch (e: Throwable) {
-            AndroidUtils.log("[packit] failed to read write_logs setting: $e")
-            false
+            AndroidUtils.log("[packit] failed to read settings in reloadConfig: $e")
         }
     }
 
-    private fun isDebugEnabled(): Boolean {
-        val pluginsDir: String = getPluginsDir() ?: return true
-        return try {
-            val file = File(pluginsDir, "plugin_settings.json")
-            if (!file.exists()) return true
-            val json = JSONObject(file.readText())
-            val pluginObj: JSONObject? = json.optJSONObject("packit") ?: json.optJSONObject("shareui_packit")
-            if (pluginObj != null && pluginObj.has("debug_logs")) {
-                pluginObj.optBoolean("debug_logs", true)
-            } else {
-                true
-            }
-        } catch (e: Throwable) {
-            AndroidUtils.log("[packit] failed to read debug_logs setting: $e")
-            true
-        }
+    @JvmStatic
+    fun setDebugLogs(enabled: Boolean) {
+        isDebugEnabled = enabled
+    }
+
+    @JvmStatic
+    fun setWriteLogs(enabled: Boolean) {
+        isWriteLogsEnabled = enabled
     }
 
     private fun writeToFile(msg: String) {
@@ -155,16 +160,21 @@ object Logx {
     @JvmStatic
     fun logx(msg: String, isDebug: Boolean = false) {
         val formatted: String = if (msg.startsWith("[packit]")) msg else "[packit] $msg"
-        if (isDebug && !isDebugEnabled()) {
+        if (isDebug && !isDebugEnabled) {
             return
         }
         try {
             AndroidUtils.log(formatted)
         } catch (e: Throwable) {
+            try {
+                val fileLogCls: Class<*> = Class.forName("org.telegram.messenger.FileLog")
+                fileLogCls.getMethod("d", String::class.java).invoke(null, formatted)
+            } catch (_: Throwable) {
+            }
             Log.d(TAG, "AndroidUtils.log fallback: $e")
             Log.d(TAG, formatted)
         }
-        if (isWriteLogsEnabled()) {
+        if (isWriteLogsEnabled) {
             writeToFile(formatted)
         }
     }

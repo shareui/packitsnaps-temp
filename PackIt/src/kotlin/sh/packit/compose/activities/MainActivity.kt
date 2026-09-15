@@ -1,5 +1,6 @@
 package sh.packit.compose.activities
 
+import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,13 +30,14 @@ import sh.packit.core.state.CoreState
 import sh.packit.core.utils.OpenUrl
 
 @Composable
-fun MainSettingsScreen(
+fun MainActivityScreen(
     modifier: Modifier = Modifier,
     onAction: ((String) -> Unit)? = null
 ) {
-    val strings = Strings.of(CoreState.PLUGIN_ID)
+    val strings: Strings = Strings.of(CoreState.PLUGIN_ID)
     val scrollState = rememberScrollState()
-    val isDark = TelegramThemeBridge.isDark || isSystemInDarkTheme()
+    val isDark: Boolean = TelegramThemeBridge.isDark || isSystemInDarkTheme()
+    val context: Context = LocalContext.current
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -52,7 +54,11 @@ fun MainSettingsScreen(
                 title = "PackIt",
                 subtitle = strings.get("plugin_subtitle", "Resource catalog for exteraGram"),
                 onStickerLongClick = {
-                    BulletinHelper.showInfo("PackIt Easter Egg :)")
+                    if (onAction != null) {
+                        onAction("debug_menu")
+                    } else {
+                        DebugActivity.open(context, strings.get("debug_menu", "Debug menu"))
+                    }
                 }
             )
 
@@ -65,6 +71,14 @@ fun MainSettingsScreen(
             SettingsFooter()
         }
     }
+}
+
+@Composable
+fun MainSettingsScreen(
+    modifier: Modifier = Modifier,
+    onAction: ((String) -> Unit)? = null
+) {
+    MainActivityScreen(modifier = modifier, onAction = onAction)
 }
 
 @Composable
@@ -108,6 +122,8 @@ private fun PreferencesSection(
     isDark: Boolean,
     onAction: ((String) -> Unit)?
 ) {
+    val context = LocalContext.current
+
     SettingsSectionTitle(title = strings.get("settings_header", "Preferences"))
     ExpressiveSettingsGroup {
         SettingsItem(
@@ -143,7 +159,13 @@ private fun PreferencesSection(
             iconName = "msg_settings",
             iconColors = ExpressivePalette.categoryColors("settings", isDark),
             shape = expressiveShapeFor(4, 5),
-            onClick = { onAction?.invoke("other_settings") ?: BulletinHelper.showInfo("Settings") }
+            onClick = {
+                if (onAction != null) {
+                    onAction("other_settings")
+                } else {
+                    SettingsActivity.open(context, strings.get("other_settings", "Settings"))
+                }
+            }
         )
     }
 }

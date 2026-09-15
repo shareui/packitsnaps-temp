@@ -1,6 +1,6 @@
 # pyright: reportMissingImports=false
 import threading
-from packutil import logx, initLogSession
+from packutil import logx, initLogSession, reloadConfig
 from .core.DexLoader import getCoreLoader, loadCoreClass, callStatic, resetLoaders
 
 def checkRestartRequired(plugin):
@@ -64,6 +64,14 @@ def initCoreDex(plugin=None):
                 logx(f"markCoreReady error: {e}", isDebug=False)
         else:
             logx("initCoreDex: CoreState cls is None", isDebug=False)
+
+        logxCls = loadCoreClass("sh.packit.core.utils.Logx")
+        if logxCls is not None:
+            try:
+                callStatic(logxCls, "reloadConfig")
+            except Exception as e:
+                logx(f"Logx reloadConfig error: {e}", isDebug=False)
+
         if plugin is not None:
             checkRestartRequired(plugin)
     except Exception as e:
@@ -71,6 +79,7 @@ def initCoreDex(plugin=None):
 
 def load(plugin):
     initLogSession()
+    reloadConfig()
     logx(f"loading plugin {getattr(plugin, 'id', None)}", isDebug=False)
     threading.Thread(target=initCoreDex, args=(plugin,), name="KtPackitCoreInit", daemon=True).start()
 

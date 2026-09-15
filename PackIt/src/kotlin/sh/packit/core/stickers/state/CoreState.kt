@@ -19,6 +19,7 @@ object CoreState {
 
     var isCoreInitialized: Boolean = false
     var isComposeAvailable: Boolean = false
+    var assetsDir: String? = null
 
     @JvmStatic
     fun markCoreReady() { isCoreInitialized = true }

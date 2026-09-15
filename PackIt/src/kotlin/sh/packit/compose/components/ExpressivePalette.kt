@@ -14,6 +14,8 @@ object ExpressivePalette {
                 "profile" -> Color(0xFF7D5260) to Color(0xFFFFD8E4)
                 "utilities" -> Color(0xFF3B4869) to Color(0xFFD9E2FF)
                 "settings" -> Color(0xFF3F474D) to Color(0xFFDEE3EB)
+                "appearance" -> Color(0xFF4A3968) to Color(0xFFEADBFF)
+                "debug" -> Color(0xFF5E3B33) to Color(0xFFFFDAD4)
                 else -> Color(0xFF004A77) to Color(0xFFC2E7FF)
             }
         } else {
@@ -26,6 +28,8 @@ object ExpressivePalette {
                 "profile" -> Color(0xFFFFD8E4) to Color(0xFF631835)
                 "utilities" -> Color(0xFFD9E2FF) to Color(0xFF27304E)
                 "settings" -> Color(0xFFEFF1F7) to Color(0xFF44474F)
+                "appearance" -> Color(0xFFEADBFF) to Color(0xFF4A3968)
+                "debug" -> Color(0xFFFFDAD4) to Color(0xFF5E3B33)
                 else -> Color(0xFFD7E3FF) to Color(0xFF005AC1)
             }
         }

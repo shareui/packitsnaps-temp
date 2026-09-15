@@ -185,3 +185,41 @@ try {
 }
 ```
 
+---
+
+## 3. Invoking Python (Chaquopy) from Kotlin
+
+When invoking Python plugin code from Kotlin via Chaquopy reflection:
+
+### 1. Module Namespace in ElyxCore
+- Python plugin modules do **NOT** reside at the top level of `sys.modules`.
+- They are imported under the package `ElyxPlugins.<plugin_id>.*`.
+- **Wrong**: `py.getModule("ui.activities.PluginSettings")` (fails with `ModuleNotFoundError`).
+- **Correct**: `py.getModule("ElyxPlugins." + CoreState.PLUGIN_ID + ".ui.activities.PluginSettings")` (e.g. `ElyxPlugins.packit.ui.activities.PluginSettings`).
+
+### 2. Method Reflection on `PyObject.callAttr`
+- `PyObject.callAttr(String name, Object... args)` has Java parameter types `(String, Object[])`.
+- When invoking `callAttr` through reflection via `Method.invoke(Object obj, Object... args)`, passing an `Array<Any?>` as the second argument can unpack the array elements into `Method.invoke` itself, causing `IllegalArgumentException: wrong number of arguments`.
+- **Correct pattern in Kotlin**:
+```kotlin
+val pyObjClass = Class.forName("com.chaquo.python.PyObject")
+val callAttr = pyObjClass.getMethod("callAttr", String::class.java, Array<Any?>::class.java)
+val args = arrayOf<Any?>(param1, param2)
+val result = callAttr.invoke(module, *arrayOf<Any?>("functionName", args))
+```
+
+### 3. Return Types from `callAttr`
+- `PyObject.callAttr` returns a `PyObject` instance, not a raw Java `Boolean` or primitive.
+- A raw cast like `result as? Boolean` evaluates to `null`.
+- Check truthiness via `result?.toString() == "True" || result as? Boolean == true` or call `pyObjClass.getMethod("toBoolean").invoke(result)`.
+
+---
+
+## 4. File Paths and Cruel SDK Functions
+
+- **NEVER hardcode filesystem paths** (e.g. `/data/user/0/...`, `/data/data/...`).
+- Always use the official path resolution functions provided by `cruel`:
+  - **In Kotlin**: use `de.shareui.exterasdk.cruel.PluginPaths` (e.g. `PluginPaths.getAssetsDir(pluginId)`, `PluginPaths.getSourceDir(pluginId)`, `PluginPaths.getPluginsDir()`).
+  - **In Python**: use `import cruel`.
+
+

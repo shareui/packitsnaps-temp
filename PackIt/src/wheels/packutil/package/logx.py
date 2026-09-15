@@ -54,45 +54,42 @@ def initLogSession(force: bool = False) -> str:
     _activeLogPath = latestFile if os.path.exists(latestFile) else historyFile
     return _activeLogPath
 
-def _isWriteLogsEnabled() -> bool:
-    try:
-        from elyx import settings as _s
-        val = _s.get("write_logs", None)
-        if val is not None:
-            return bool(val)
-    except Exception as e:
-        _log(f"[packit] write_logs settings lookup notice: {e}")
-    try:
-        path = _getPluginsDir() + "/plugin_settings.json"
-        if not os.path.exists(path):
-            return False
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        pdata = data.get("packit") or data.get("shareui_packit") or {}
-        return bool(pdata.get("write_logs", False))
-    except Exception as e:
-        _log(f"[packit] write_logs json lookup notice: {e}")
-        return False
+_isDebugEnabled: bool = True
+_isWriteLogsEnabled: bool = False
 
-def _isDebugLogsEnabled() -> bool:
+def reloadConfig() -> None:
+    global _isDebugEnabled, _isWriteLogsEnabled
     try:
         from elyx import settings as _s
-        val = _s.get("debug_logs", None)
-        if val is not None:
-            return bool(val)
-    except Exception as e:
-        _log(f"[packit] debug_logs settings lookup notice: {e}")
+        val_debug = _s.get("debug_logs", None)
+        val_write = _s.get("write_logs", None)
+        if val_debug is not None or val_write is not None:
+            if val_debug is not None:
+                _isDebugEnabled = bool(val_debug)
+            if val_write is not None:
+                _isWriteLogsEnabled = bool(val_write)
+            return
+    except Exception:
+        pass
     try:
         path = _getPluginsDir() + "/plugin_settings.json"
         if not os.path.exists(path):
-            return True
+            return
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         pdata = data.get("packit") or data.get("shareui_packit") or {}
-        return bool(pdata.get("debug_logs", True))
+        _isDebugEnabled = bool(pdata.get("debug_logs", True))
+        _isWriteLogsEnabled = bool(pdata.get("write_logs", False))
     except Exception as e:
-        _log(f"[packit] debug_logs json lookup notice: {e}")
-        return True
+        _log(f"[packit] reloadConfig failed: {e}")
+
+def setDebugLogs(enabled: bool) -> None:
+    global _isDebugEnabled
+    _isDebugEnabled = bool(enabled)
+
+def setWriteLogs(enabled: bool) -> None:
+    global _isWriteLogsEnabled
+    _isWriteLogsEnabled = bool(enabled)
 
 def _writeToFile(msg: str):
     global _activeLogPath
@@ -125,8 +122,10 @@ def logx(msg: str, isDebug: bool):
     formatted = str(msg)
     if not formatted.startswith("[packit]"):
         formatted = f"[packit] {formatted}"
-    if isDebug and not _isDebugLogsEnabled():
+    if isDebug and not _isDebugEnabled:
         return
     _log(formatted)
-    if _isWriteLogsEnabled():
+    if _isWriteLogsEnabled:
         _writeToFile(formatted)
+
+reloadConfig()

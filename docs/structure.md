@@ -1,47 +1,55 @@
 # ktpackit Structure
 
 ## 1. Kotlin (`PackIt/src/kotlin/`)
-* `sh/packit/core/` -> `Core.dex` (non-composable logic):
-  * [`stickers/TelegramStickerLoader.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/stickers/TelegramStickerLoader.kt): sticker loader, caching, placeholder.
-  * [`info/ClientInfo.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/info/ClientInfo.kt): client fork detection.
-  * [`bridge/NavigationBridge.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/bridge/NavigationBridge.kt): url opening constants and bridge.
-  * [`utils/OpenUrl.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/utils/OpenUrl.kt): URL navigation helpers (`openUrlInApp` via `Browser.openUrl` for Telegram in-app links, `openUrlInBrowser` for external links).
-  * [`state/CoreState.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/state/CoreState.kt): state flags, dynamic `pluginVersion` lookup via `de.shareui.exterasdk.metadata.Metadata`.
-  * [`ui/RestartRequired.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/core/ui/RestartRequired.kt): app restart notification bulletin with retry logic.
-* `sh/packit/compose/` -> `Compose.dex` (Jetpack Compose UI):
-  * [`ComposeEntry.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/compose/ComposeEntry.kt): `createView()` entrypoint for ComposeFragment.
-  * [`activities/MainSettings.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/compose/activities/MainSettings.kt): settings screen.
-  * `components/`: UI items ([`TelegramSticker.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/sh/packit/compose/components/TelegramSticker.kt), `TextCloud`, `SettingsItem`, `SettingsHeader`, `SettingsFooter`, `SettingsSectionTitle`, `ExpressiveSettingsGroup`, `ExpressiveShape`, `ExpressivePalette`, `ExpressiveBounce` spring animations).
-* `stubs/`: compile-time stubs:
-  * `org/telegram/*`: Telegram client APIs.
-  * `de/shareui/composeshell/*`: Compose theme bridge.
-  * `de/shareui/exterasdk/*`: KotlinSDK stubs ([`metadata/Metadata.kt`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/kotlin/stubs/de/shareui/exterasdk/metadata/Metadata.kt), `localization/Strings.kt`, `ui/BulletinHelper.kt`, `utils/AndroidUtils.java`).
+
+### Core (`sh/packit/core/` -> `Core.dex`)
+- `PackIt/src/kotlin/sh/packit/core/stickers/TelegramStickerLoader.kt` - sticker loading, caching, placeholder
+- `PackIt/src/kotlin/sh/packit/core/info/ClientInfo.kt` - client fork detection
+- `PackIt/src/kotlin/sh/packit/core/bridge/NavigationBridge.kt` - URL navigation constants and bridge
+- `PackIt/src/kotlin/sh/packit/core/utils/OpenUrl.kt` - in-app and browser URL openers
+- `PackIt/src/kotlin/sh/packit/core/utils/Logx.kt` - unified logger with FileLog fallback
+- `PackIt/src/kotlin/sh/packit/core/state/CoreState.kt` - state flags and plugin version resolution
+- `PackIt/src/kotlin/sh/packit/core/ui/RestartRequired.kt` - restart bulletin notification
+
+### Compose UI (`sh/packit/compose/` -> `Compose.dex`)
+- `PackIt/src/kotlin/sh/packit/compose/ComposeEntry.kt` - ComposeFragment entrypoint, routes between screens
+- `PackIt/src/kotlin/sh/packit/compose/activities/MainActivity.kt` - main settings screen
+- `PackIt/src/kotlin/sh/packit/compose/activities/Settings.kt` - sub-fragment settings screen and SettingsActivity launcher
+- `PackIt/src/kotlin/sh/packit/compose/activities/DebugActivity.kt` - debug menu activity and screen (debug_logs switch)
+- `PackIt/src/kotlin/sh/packit/compose/activities/AppearanceActivity.kt` - appearance screen (font selector, size slider, reset)
+- `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches, selectors, sliders, headers, footers, groups, bounce animations)
+- `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper)
+
+### Compile-time Stubs (`PackIt/src/kotlin/stubs/`)
+- `PackIt/src/kotlin/stubs/org/telegram/` - Telegram client APIs
+- `PackIt/src/kotlin/stubs/de/shareui/composeshell/` - Compose theme bridge
+- `PackIt/src/kotlin/stubs/de/shareui/exterasdk/` - KotlinSDK stubs (Metadata, Strings, BulletinHelper, AndroidUtils, PluginSettings)
 
 ## 2. Python (`PackIt/src/python/`)
-* [`BasePlugin.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/python/BasePlugin.py): plugin entry and `open_settings()`.
-* [`Main.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/python/Main.py): lifecycle callbacks.
-* [`core/DexLoader.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/python/core/DexLoader.py): `Core.dex` loader with `DelegateLastClassLoader`.
-* [`ui/SettingsScreen.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/src/python/ui/SettingsScreen.py): opens `ComposeFragment` (`Compose.dex` + parent `CoreLoader`).
+- `PackIt/src/python/BasePlugin.py` - plugin lifecycle, open_settings, open_sub_settings
+- `PackIt/src/python/Main.py` - background init and startup checks
+- `PackIt/src/python/core/DexLoader.py` - Core.dex loader and cross-dex reflection utilities
+- `PackIt/src/python/ui/activities/PluginSettings.py` - opens ComposeFragment with CoreLoader chaining
 
 ## 3. Build & Tools
-* `tools/compile/`: headless Gradle project for compiling Compose to DEX.
-* [`cruel/builds/hooks/compile_core.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/cruel/builds/hooks/compile_core.py): compiles `sh.packit.core` via `kotlinc` + `d8` -> `Core.dex`.
-* [`cruel/builds/hooks/compile_compose.py`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/cruel/builds/hooks/compile_compose.py): syncs compose to `tools/compile`, runs `./gradlew --no-daemon :app:dexBuilderRelease`, merges compose DEX -> `Compose.dex`.
-* `cruel/local/cache/kotlin/`: DEX and toolchain cache.
-* `PackIt/res/assets/`: temporary destination for `Core.dex` and `Compose.dex` (cleaned after pack).
+- `tools/compile/` - Gradle project compiling Compose Kotlin sources to DEX
+- `cruel/builds/hooks/compile_core.py` - compiles Core via kotlinc + d8 -> Core.dex
+- `cruel/builds/hooks/compile_compose.py` - builds Compose via Gradle dexBuilderRelease and D8 merge -> Compose.dex
+- `cruel/local/cache/kotlin/` - build and toolchain cache
+- `PackIt/res/assets/` - destination for packed DEX files (cleaned after pack)
 
-## 4. KotlinSDK Integration
-* Plugin relies on `kotlinsdk` (`de.shareui.exterasdk.*` injected into base `ClassLoader` by `KotlinSDK` plugin):
-  * [`de.shareui.exterasdk.metadata.Metadata`](file:///home/shareui/dev/extera/plugins-dev/plugins/sdkkt/KotlinSDK/src/kotlin/de/shareui/exterasdk/metadata/Metadata.kt): dynamic metadata and version retrieval.
-  * [`de.shareui.exterasdk.localization.Strings`](file:///home/shareui/dev/extera/plugins-dev/plugins/sdkkt/KotlinSDK/src/kotlin/de/shareui/exterasdk/localization/Strings.kt): localized strings.
-  * [`de.shareui.exterasdk.ui.BulletinHelper`](file:///home/shareui/dev/extera/plugins-dev/plugins/sdkkt/KotlinSDK/src/kotlin/de/shareui/exterasdk/ui/BulletinHelper.kt): Telegram bulletin notifications.
+## 4. KotlinSDK & ComposeShell Integration
+- `de.shareui.exterasdk.metadata.Metadata` - plugin version and metadata
+- `de.shareui.exterasdk.localization.Strings` - localized strings
+- `de.shareui.exterasdk.ui.BulletinHelper` - Telegram bulletins
+- `de.shareui.exterasdk.utils.AndroidUtils` - UI/queue dispatch and static log
+- `de.shareui.exterasdk.settings.PluginSettings` - persistent key-value plugin settings
+- `de.shareui.exterasdk.settings.ComposeShell` - ComposeFragment launcher with parentLoader support
+- Chaquopy Interop:
+  - Python modules are resolved under `ElyxPlugins.<plugin_id>.*`
+  - Method reflection on `PyObject.callAttr` uses `*arrayOf(method, args)`
 
 ## 5. Resources & Localization (`PackIt/res/`)
-* `PackIt/res/strings/`:
-  * [`config.toml`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/res/strings/config.toml): locale mapping table (`en`, `ru`, `de`).
-  * [`en.yml`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/res/strings/en.yml): English strings, base UI keys and `plugin_description`.
-  * [`ru.yml`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/res/strings/ru.yml): Russian strings (`plugin_description`).
-  * [`de.yml`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/PackIt/res/strings/de.yml): German strings (`plugin_description`).
-* [`cruel.toml`](file:///home/shareui/dev/extera/plugins-dev/plugins/ktpackit/cruel.toml):
-  * `description = "{plugin_description} [shareui/packit-source](https://github.com/shareui/packit-source)"`: dynamic description template resolved per locale during build.
-
+- `PackIt/res/strings/config.toml` - language mapping table
+- `PackIt/res/strings/en.yml`, `ru.yml`, `de.yml` - localization strings
+- `cruel.toml` - plugin metadata and build pipeline configuration

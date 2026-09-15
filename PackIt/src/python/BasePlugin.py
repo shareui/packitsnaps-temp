@@ -1,7 +1,6 @@
-# pyright: reportMissingImports=false
 from base_plugin import BasePlugin
 from .Main import load, unload
-from .ui.SettingsScreen import openSettingsScreen
+from .ui.activities.PluginSettings import openSettingsScreen, openSubSettingsScreen
 
 class Plugin(BasePlugin):
     def on_plugin_load(self):
@@ -16,3 +15,6 @@ class Plugin(BasePlugin):
 
     def open_settings(self, fragment) -> bool:
         return openSettingsScreen(parentFragment=fragment)
+
+    def open_sub_settings(self, fragment) -> bool:
+        return openSubSettingsScreen(parentFragment=fragment)

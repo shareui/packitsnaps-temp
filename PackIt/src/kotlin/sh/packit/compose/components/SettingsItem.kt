@@ -41,6 +41,7 @@ fun SettingsItem(
     shape: Shape = RoundedCornerShape(24.dp),
     badgeText: String? = null,
     showChevron: Boolean = true,
+    mini: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
     val iconPainter: Painter? = when {
@@ -54,22 +55,30 @@ fun SettingsItem(
         color = TelegramColors.DEFAULT_PLUGINSETTINGS_CELL_BG,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 76.dp)
+            .heightIn(min = if (mini) 64.dp else 76.dp)
             .expressiveBounce(targetScale = 0.97f, onClick = onClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = if (mini) 14.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (iconPainter != null) {
-                ItemIconBadge(
-                    painter = iconPainter,
-                    contentDescription = title,
-                    containerColor = iconColors.first,
-                    tintColor = iconColors.second
-                )
+                if (mini) {
+                    ItemLeadingIcon(
+                        painter = iconPainter,
+                        contentDescription = title,
+                        tintColor = iconColors.second.takeIf { it != Color.Unspecified } ?: TelegramColors.windowBackgroundWhiteBlueIcon
+                    )
+                } else {
+                    ItemIconBadge(
+                        painter = iconPainter,
+                        contentDescription = title,
+                        containerColor = iconColors.first,
+                        tintColor = iconColors.second
+                    )
+                }
                 Spacer(modifier = Modifier.width(16.dp))
             }
 
@@ -117,6 +126,25 @@ private fun ItemIconBadge(
             .size(52.dp)
             .clip(CircleShape)
             .background(containerColor),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(24.dp),
+            tint = tintColor
+        )
+    }
+}
+
+@Composable
+private fun ItemLeadingIcon(
+    painter: Painter,
+    contentDescription: String,
+    tintColor: Color
+) {
+    Box(
+        modifier = Modifier.size(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Icon(
