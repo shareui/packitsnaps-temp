@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.shareui.composeshell.TelegramColors
-import de.shareui.composeshell.TelegramThemeBridge
 import de.shareui.exterasdk.settings.PluginSettings
 import sh.packit.compose.utils.rememberTelegramPainter
 import sh.packit.core.state.CoreState
@@ -169,10 +167,10 @@ private fun SwitchControl(
     enabled: Boolean,
     onToggle: (Boolean) -> Unit
 ) {
-    val isDark = TelegramThemeBridge.isDark || isSystemInDarkTheme()
-    val uncheckTrack = if (isDark) Color(0xFF333E4C) else Color(0xFFE2E4E8)
-    val uncheckThumb = if (isDark) Color(0xFF1E2732) else Color(0xFF7A838E)
-    val uncheckIcon = uncheckTrack
+    val activeTrack = MaterialTheme.colorScheme.primary
+    val activeThumb = MaterialTheme.colorScheme.onPrimary
+    val inactiveTrack = MaterialTheme.colorScheme.surfaceVariant
+    val inactiveThumb = MaterialTheme.colorScheme.onSurfaceVariant
 
     Switch(
         checked = checked,
@@ -187,17 +185,18 @@ private fun SwitchControl(
                 Icon(
                     imageVector = if (isChecked) SwitchCheckIcon else SwitchCloseIcon,
                     contentDescription = null,
-                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                    modifier = Modifier.size(SwitchDefaults.IconSize),
+                    tint = if (isChecked) activeTrack else inactiveTrack
                 )
             }
         },
         colors = SwitchDefaults.colors(
-            checkedThumbColor = TelegramColors.switchThumbChecked.takeIf { it != Color.Unspecified } ?: MaterialTheme.colorScheme.onPrimary,
-            checkedTrackColor = TelegramColors.switchTrackChecked.takeIf { it != Color.Unspecified } ?: TelegramColors.windowBackgroundWhiteBlueIcon,
-            checkedIconColor = TelegramColors.switchTrackChecked.takeIf { it != Color.Unspecified } ?: TelegramColors.windowBackgroundWhiteBlueIcon,
-            uncheckedThumbColor = uncheckThumb,
-            uncheckedTrackColor = uncheckTrack,
-            uncheckedIconColor = uncheckIcon,
+            checkedThumbColor = activeThumb,
+            checkedTrackColor = activeTrack,
+            checkedIconColor = activeTrack,
+            uncheckedThumbColor = inactiveThumb,
+            uncheckedTrackColor = inactiveTrack,
+            uncheckedIconColor = inactiveTrack,
             uncheckedBorderColor = Color.Transparent,
             checkedBorderColor = Color.Transparent
         )

@@ -17,12 +17,12 @@
 - `PackIt/src/kotlin/sh/packit/compose/activities/Settings.kt` - sub-fragment settings screen and SettingsActivity launcher
 - `PackIt/src/kotlin/sh/packit/compose/activities/DebugActivity.kt` - debug menu activity and screen (debug_logs switch)
 - `PackIt/src/kotlin/sh/packit/compose/activities/AppearanceActivity.kt` - appearance screen (font selector, size slider, reset)
-- `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches, selectors, sliders, headers, footers, groups, bounce animations)
+- `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches with M3/PixelPlayer contrast, selectors, sliders, headers, footers, groups, bounce animations)
 - `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper)
 
 ### Compile-time Stubs (`PackIt/src/kotlin/stubs/`)
 - `PackIt/src/kotlin/stubs/org/telegram/` - Telegram client APIs
-- `PackIt/src/kotlin/stubs/de/shareui/composeshell/` - Compose theme bridge
+- `PackIt/src/kotlin/stubs/de/shareui/composeshell/` - Compose theme bridge (TelegramTheme with M3 tonal contrast, TelegramColors)
 - `PackIt/src/kotlin/stubs/de/shareui/exterasdk/` - KotlinSDK stubs (Metadata, Strings, BulletinHelper, AndroidUtils, PluginSettings)
 
 ## 2. Python (`PackIt/src/python/`)
