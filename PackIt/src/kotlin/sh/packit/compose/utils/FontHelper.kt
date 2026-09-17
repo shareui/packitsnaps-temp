@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontFamily
 import de.shareui.composeshell.TelegramTheme
 import de.shareui.exterasdk.settings.PluginSettings
+import sh.packit.compose.components.SelectorOption
+import sh.packit.compose.components.SelectorSubOption
 import sh.packit.core.state.CoreState
 import sh.packit.core.utils.Paths
 import java.io.File
@@ -16,7 +18,9 @@ import java.io.File
 data class LoadedFont(
     val name: String,
     val displayName: String,
-    val fontFamily: FontFamily
+    val fontFamily: FontFamily,
+    val familyName: String = name,
+    val weight: String = "Regular"
 )
 
 object FontHelper {
@@ -27,6 +31,10 @@ object FontHelper {
     const val MIN_FONT_SIZE: Float = 8f
     const val MAX_FONT_SIZE: Float = 24f
     const val FONT_STEPS: Int = 15
+
+    private val WEIGHT_ORDER: List<String> = listOf(
+        "Thin", "ExtraLight", "Light", "Regular", "Medium", "SemiBold", "Bold", "ExtraBold", "Black"
+    )
 
     fun formatDisplayName(rawName: String): String {
         return when (rawName) {
@@ -40,30 +48,105 @@ object FontHelper {
         }
     }
 
+    fun formatWeightDisplayName(weight: String): String {
+        return when (weight) {
+            "ExtraLight" -> "Extra Light"
+            "SemiBold" -> "Semi Bold"
+            "ExtraBold" -> "Extra Bold"
+            else -> weight
+        }
+    }
+
+    private fun weightIndex(weight: String): Int {
+        val idx = WEIGHT_ORDER.indexOf(weight)
+        return if (idx >= 0) idx else 99
+    }
+
     fun resolveAssetsDir(explicitDir: String?): String? {
         return Paths.getAssetsDir(CoreState.PLUGIN_ID, explicitDir)?.absolutePath
     }
 
     fun loadFonts(assetsDir: String?): List<LoadedFont> {
         val list = mutableListOf<LoadedFont>()
-        list.add(LoadedFont(DEFAULT_FONT_NAME, "Default", FontFamily.Default))
+        list.add(LoadedFont(
+            name = DEFAULT_FONT_NAME,
+            displayName = "Default",
+            fontFamily = FontFamily.Default,
+            familyName = DEFAULT_FONT_NAME,
+            weight = "Regular"
+        ))
         val fontsDir: File? = Paths.getFontsDir(CoreState.PLUGIN_ID, assetsDir)
         if (fontsDir != null && fontsDir.exists() && fontsDir.isDirectory) {
-            fontsDir.listFiles()?.filter { it.name.contains("Regular") }?.forEach { file ->
-                val rawName = file.name.substringBefore("-").replace(".ttf", "")
+            fontsDir.listFiles()?.filter { it.name.endsWith(".ttf") }?.forEach { file ->
+                val raw = file.name.removeSuffix(".ttf")
+                val rawFamily = raw.substringBefore("-")
+                val weight = if (raw.contains("-")) raw.substringAfter("-") else "Regular"
                 val family = loadFontFamilyFromFile(file)
                 if (family != null) {
-                    list.add(LoadedFont(rawName, formatDisplayName(rawName), family))
+                    val displayName = "${formatDisplayName(rawFamily)} ${formatWeightDisplayName(weight)}"
+                    list.add(LoadedFont(
+                        name = raw,
+                        displayName = displayName,
+                        fontFamily = family,
+                        familyName = rawFamily,
+                        weight = weight
+                    ))
                 }
             }
         }
-        return list.distinctBy { it.name }.sortedWith { a, b ->
-            if (a.name == DEFAULT_FONT_NAME) -1 else if (b.name == DEFAULT_FONT_NAME) 1 else a.displayName.compareTo(b.displayName)
+        return list.distinctBy { it.name }
+    }
+
+    fun buildSelectorOptions(fonts: List<LoadedFont>): List<SelectorOption> {
+        val result = mutableListOf<SelectorOption>()
+        result.add(
+            SelectorOption(
+                key = DEFAULT_FONT_NAME,
+                label = "Default",
+                font = FontFamily.Default,
+                expandable = false,
+                subOptions = emptyList()
+            )
+        )
+
+        val fontFamilies = fonts
+            .filter { it.name != DEFAULT_FONT_NAME }
+            .groupBy { it.familyName }
+            .toList()
+            .sortedBy { (familyKey, _) -> formatDisplayName(familyKey) }
+
+        for ((familyKey, familyFonts) in fontFamilies) {
+            val sortedVars = familyFonts.sortedBy { weightIndex(it.weight) }
+            val subOptions = sortedVars.map { font ->
+                SelectorSubOption(
+                    key = font.name,
+                    label = formatWeightDisplayName(font.weight),
+                    font = font.fontFamily
+                )
+            }
+            val familyFont = familyFonts.find { it.weight == "Regular" }?.fontFamily
+                ?: familyFonts.first().fontFamily
+
+            result.add(
+                SelectorOption(
+                    key = familyKey,
+                    label = formatDisplayName(familyKey),
+                    font = familyFont,
+                    expandable = true,
+                    subOptions = subOptions
+                )
+            )
         }
+        return result
     }
 
     fun getFontFamily(name: String, fonts: List<LoadedFont>): FontFamily {
-        return fonts.find { it.name == name }?.fontFamily ?: FontFamily.Default
+        if (name == DEFAULT_FONT_NAME) return FontFamily.Default
+        val exact = fonts.find { it.name == name }
+        if (exact != null) return exact.fontFamily
+        val byFamily = fonts.find { it.familyName == name && it.weight == "Regular" }
+            ?: fonts.find { it.familyName == name }
+        return byFamily?.fontFamily ?: FontFamily.Default
     }
 
     fun createTypography(base: Typography, fontFamily: FontFamily, scale: Float): Typography {

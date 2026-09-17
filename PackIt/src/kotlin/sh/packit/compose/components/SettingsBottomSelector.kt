@@ -1,5 +1,19 @@
 package sh.packit.compose.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,10 +28,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,18 +39,20 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +63,20 @@ import sh.packit.compose.icons.size20dp.check
 import sh.packit.compose.utils.LocalMonochromeIcons
 import sh.packit.compose.utils.rememberTelegramPainter
 import sh.packit.core.state.CoreState
+
+data class SelectorSubOption(
+    val key: String,
+    val label: String,
+    val font: FontFamily? = null
+)
+
+data class SelectorOption(
+    val key: String,
+    val label: String,
+    val font: FontFamily? = null,
+    val expandable: Boolean = false,
+    val subOptions: List<SelectorSubOption> = emptyList()
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,6 +90,8 @@ fun SettingsBottomSelector(
     defaultKey: String = "",
     options: Map<String, String> = emptyMap(),
     optionsFonts: Map<String, FontFamily>? = null,
+    selectorOptions: List<SelectorOption>? = null,
+    imageVector: ImageVector? = null,
     iconName: String? = null,
     iconRes: Int? = null,
     iconColors: Pair<Color, Color> = TelegramColors.DEFAULT_PLUGINSETTINGS_BG to TelegramColors.windowBackgroundWhiteBlueIcon,
@@ -80,6 +112,32 @@ fun SettingsBottomSelector(
     val currentKey: String = selectedKey ?: internalKey
     var showSheet: Boolean by remember { mutableStateOf(false) }
 
+    val effectiveOptions: List<SelectorOption> = remember(selectorOptions, options, optionsFonts) {
+        selectorOptions ?: options.map { (k, v) ->
+            SelectorOption(
+                key = k,
+                label = v,
+                font = optionsFonts?.get(k),
+                expandable = false,
+                subOptions = emptyList()
+            )
+        }
+    }
+
+    val (resolvedLabel, resolvedFont) = remember(currentKey, effectiveOptions) {
+        for (opt in effectiveOptions) {
+            if (opt.key == currentKey) {
+                return@remember opt.label to opt.font
+            }
+            for (sub in opt.subOptions) {
+                if (sub.key == currentKey) {
+                    return@remember "${opt.label} ${sub.label}" to (sub.font ?: opt.font)
+                }
+            }
+        }
+        (options[currentKey] ?: currentKey) to optionsFonts?.get(currentKey)
+    }
+
     val handleSelection: (String) -> Unit = { newKey ->
         if (selectedKey == null) internalKey = newKey
         if (!settingKey.isNullOrEmpty()) {
@@ -89,6 +147,7 @@ fun SettingsBottomSelector(
     }
 
     val iconPainter: Painter? = when {
+        imageVector != null -> rememberVectorPainter(imageVector)
         iconName != null -> rememberTelegramPainter(iconName)
         iconRes != null && iconRes != 0 -> rememberTelegramPainter(iconRes)
         else -> null
@@ -105,8 +164,8 @@ fun SettingsBottomSelector(
         SelectorItemContent(
             title = title,
             subtitle = subtitle,
-            selectedLabel = options[currentKey] ?: currentKey,
-            selectedFont = optionsFonts?.get(currentKey),
+            selectedLabel = resolvedLabel,
+            selectedFont = resolvedFont,
             iconPainter = iconPainter,
             iconColors = effectiveColors
         )
@@ -115,9 +174,9 @@ fun SettingsBottomSelector(
     if (showSheet) {
         SelectorBottomSheet(
             title = title,
-            options = options,
-            optionsFonts = optionsFonts,
+            options = effectiveOptions,
             currentKey = currentKey,
+            defaultKey = defaultKey,
             onSelect = handleSelection,
             onDismiss = { showSheet = false }
         )
@@ -223,18 +282,31 @@ private fun SelectorTitleRow(
 @Composable
 private fun SelectorBottomSheet(
     title: String,
-    options: Map<String, String>,
-    optionsFonts: Map<String, FontFamily>?,
+    options: List<SelectorOption>,
     currentKey: String,
+    defaultKey: String = "",
     onSelect: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    var expandedKey: String? by remember { mutableStateOf(null) }
+    val scrollState = rememberScrollState()
+    val hasExpandable: Boolean = remember(options) { options.any { it.expandable } }
+
+    LaunchedEffect(expandedKey) {
+        if (expandedKey != null) scrollState.animateScrollTo(0)
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = TelegramColors.DEFAULT_PLUGINSETTINGS_CELL_BG,
         contentColor = TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT
     ) {
-        Column(modifier = Modifier.padding(bottom = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+                .animateContentSize(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow))
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
@@ -242,23 +314,28 @@ private fun SelectorBottomSheet(
                 color = TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
             )
-            LazyColumn(
+            Column(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .heightIn(max = 420.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .heightIn(max = 440.dp)
+                    .verticalScroll(scrollState)
             ) {
-                items(options.entries.toList()) { entry ->
-                    val isSelected: Boolean = entry.key == currentKey
-                    SelectorOptionRow(
-                        key = entry.key,
-                        label = entry.value,
-                        isSelected = isSelected,
-                        font = optionsFonts?.get(entry.key),
-                        onClick = {
-                            onSelect(entry.key)
-                            onDismiss()
-                        }
+                options.forEach { option ->
+                    val isDefault: Boolean = option.key == defaultKey ||
+                            option.key.equals("default", ignoreCase = true) ||
+                            (!option.expandable && hasExpandable)
+                    val isExpanded: Boolean = expandedKey == option.key
+                    val shouldBeVisible: Boolean = expandedKey == null || isDefault || isExpanded
+
+                    ExpandableOptionItem(
+                        option = option,
+                        currentKey = currentKey,
+                        isExpanded = isExpanded,
+                        shouldBeVisible = shouldBeVisible,
+                        onToggleExpand = { expandedKey = if (isExpanded) null else option.key },
+                        onSelect = onSelect,
+                        onDismiss = onDismiss
                     )
                 }
             }
@@ -267,19 +344,107 @@ private fun SelectorBottomSheet(
 }
 
 @Composable
+private fun ExpandableOptionItem(
+    option: SelectorOption,
+    currentKey: String,
+    isExpanded: Boolean,
+    shouldBeVisible: Boolean,
+    onToggleExpand: () -> Unit,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isOptionActive: Boolean = option.key == currentKey || option.subOptions.any { it.key == currentKey }
+    val isExpandable: Boolean = option.expandable && option.subOptions.isNotEmpty()
+    val animProgress: Float by animateFloatAsState(
+        targetValue = if (shouldBeVisible) 1f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow),
+        label = "optionAnimProgress"
+    )
+
+    AnimatedVisibility(
+        visible = shouldBeVisible,
+        enter = fadeIn(tween(220, easing = LinearOutSlowInEasing)) +
+                expandVertically(
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow),
+                    expandFrom = Alignment.Top
+                ) +
+                scaleIn(initialScale = 0.94f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow)),
+        exit = fadeOut(tween(160, easing = FastOutLinearInEasing)) +
+                shrinkVertically(
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow),
+                    shrinkTowards = Alignment.Top
+                ) +
+                scaleOut(targetScale = 0.94f, animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .blur(((1f - animProgress) * 10f).dp)
+        ) {
+            SelectorOptionRow(
+                label = option.label,
+                isActive = isOptionActive,
+                isExpandable = isExpandable,
+                isExpanded = isExpanded,
+                font = option.font,
+                onClick = { if (isExpandable) onToggleExpand() else { onSelect(option.key); onDismiss() } }
+            )
+            AnimatedVisibility(
+                visible = isExpandable && isExpanded,
+                enter = fadeIn(tween(180, easing = LinearOutSlowInEasing)) +
+                        expandVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow), expandFrom = Alignment.Top),
+                exit = fadeOut(tween(140, easing = FastOutLinearInEasing)) +
+                        shrinkVertically(spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow), shrinkTowards = Alignment.Top)
+            ) {
+                SubOptionsList(subOptions = option.subOptions, currentKey = currentKey, onSelect = onSelect, onDismiss = onDismiss)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubOptionsList(
+    subOptions: List<SelectorSubOption>,
+    currentKey: String,
+    onSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        subOptions.forEach { subOption ->
+            SelectorSubOptionRow(
+                label = subOption.label,
+                isActive = subOption.key == currentKey,
+                font = subOption.font,
+                onClick = {
+                    onSelect(subOption.key)
+                    onDismiss()
+                }
+            )
+        }
+    }
+}
+
+@Composable
 private fun SelectorOptionRow(
-    key: String,
     label: String,
-    isSelected: Boolean,
+    isActive: Boolean,
+    isExpandable: Boolean,
+    isExpanded: Boolean,
     font: FontFamily?,
     onClick: () -> Unit
 ) {
-    val bgColor: Color = if (isSelected) {
+    val bgColor: Color = if (isActive) {
         TelegramColors.windowBackgroundWhiteBlueText.copy(alpha = 0.15f)
     } else {
         TelegramColors.DEFAULT_PLUGINSETTINGS_BG
     }
-    val contentColor: Color = if (isSelected) {
+    val contentColor: Color = if (isActive) {
         TelegramColors.windowBackgroundWhiteBlueText
     } else {
         TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT
@@ -302,18 +467,82 @@ private fun SelectorOptionRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                 fontFamily = font ?: FontFamily.Default,
                 color = contentColor,
                 modifier = Modifier.weight(1f)
             )
-            if (isSelected) {
+            if (isExpandable) {
+                MorphingArrowIcon(
+                    isExpanded = isExpanded,
+                    tint = contentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            } else if (isActive) {
                 Icon(
                     imageVector = check,
                     contentDescription = null,
                     tint = contentColor,
                     modifier = Modifier.size(20.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectorSubOptionRow(
+    label: String,
+    isActive: Boolean,
+    font: FontFamily?,
+    onClick: () -> Unit
+) {
+    val bgColor: Color = if (isActive) {
+        TelegramColors.windowBackgroundWhiteBlueText.copy(alpha = 0.15f)
+    } else {
+        TelegramColors.DEFAULT_PLUGINSETTINGS_BG.copy(alpha = 0.7f)
+    }
+    val contentColor: Color = if (isActive) {
+        TelegramColors.windowBackgroundWhiteBlueText
+    } else {
+        TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 8.dp)
+    ) {
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(18.dp),
+            color = bgColor,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(46.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+                    fontFamily = font ?: FontFamily.Default,
+                    color = contentColor,
+                    modifier = Modifier.weight(1f)
+                )
+                if (isActive) {
+                    Icon(
+                        imageVector = check,
+                        contentDescription = null,
+                        tint = contentColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
     }

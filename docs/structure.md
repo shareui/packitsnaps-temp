@@ -17,9 +17,14 @@
 - `PackIt/src/kotlin/sh/packit/compose/activities/MainActivity.kt` - main settings screen
 - `PackIt/src/kotlin/sh/packit/compose/activities/Settings.kt` - sub-fragment settings screen and SettingsActivity launcher
 - `PackIt/src/kotlin/sh/packit/compose/activities/DebugActivity.kt` - debug menu activity and screen (debug_logs switch)
-- `PackIt/src/kotlin/sh/packit/compose/activities/AppearanceActivity.kt` - appearance screen (font selector, size slider, reset)
-- `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches with M3/PixelPlayer contrast, selectors, sliders, headers, footers, groups, bounce animations)
-- `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper, ScrollHelper with rememberScreenScrollState)
+- `PackIt/src/kotlin/sh/packit/compose/activities/AppearanceActivity.kt` - appearance screen (font selector with expandable variations, size slider, monochrome icons selector with live SettingsPreviewItem, reset)
+- `PackIt/src/kotlin/sh/packit/compose/components/SettingsPreviewItem.kt` - container card for settings previews with horizontal rounded rectangle
+- `PackIt/src/kotlin/sh/packit/compose/components/SettingsMonochromePreview.kt` - settings wireframe preview with realistic category dots and text skeletons
+- `PackIt/src/kotlin/sh/packit/compose/components/SettingsBottomSelector.kt` - bottom selector item supporting expandable parent categories and compact sub-options with arrows/checks
+- `PackIt/src/kotlin/sh/packit/compose/components/MorphingArrowIcon.kt` - animated path morphing chevron between down and up states with spring physics
+- `PackIt/src/kotlin/sh/packit/compose/icons/size20dp/` - 20dp vector icons (check, keyboard_arrow_up, keyboard_arrow_down)
+- `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches with M3/PixelPlayer contrast, selectors, sliders, headers, footers, groups, bounce animations, preview items)
+- `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper with multi-weight font variation loading, ScrollHelper with rememberScreenScrollState)
 
 ### Compile-time Stubs (`PackIt/src/kotlin/stubs/`)
 - `PackIt/src/kotlin/stubs/org/telegram/` - Telegram client APIs

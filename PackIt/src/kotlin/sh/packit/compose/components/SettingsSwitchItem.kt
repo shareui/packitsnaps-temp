@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -56,6 +57,7 @@ fun SettingsSwitchItem(
     checked: Boolean? = null,
     default: Boolean = false,
     enabled: Boolean = true,
+    imageVector: ImageVector? = null,
     iconName: String? = null,
     iconRes: Int? = null,
     iconColors: Pair<Color, Color> = TelegramColors.DEFAULT_PLUGINSETTINGS_BG to TelegramColors.windowBackgroundWhiteBlueIcon,
@@ -86,6 +88,7 @@ fun SettingsSwitchItem(
     }
 
     val iconPainter: Painter? = when {
+        imageVector != null -> rememberVectorPainter(imageVector)
         iconName != null -> rememberTelegramPainter(iconName)
         iconRes != null && iconRes != 0 -> rememberTelegramPainter(iconRes)
         else -> null

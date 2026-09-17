@@ -30,13 +30,18 @@ import de.shareui.exterasdk.ui.BulletinHelper
 import org.json.JSONObject
 import sh.packit.compose.components.ExpressivePalette
 import sh.packit.compose.components.ExpressiveSettingsGroup
+import sh.packit.compose.components.SelectorOption
 import sh.packit.compose.components.SettingsBottomSelector
 import sh.packit.compose.components.SettingsDottedSlider
 import sh.packit.compose.components.SettingsFooter
 import sh.packit.compose.components.SettingsItem
+import sh.packit.compose.components.SettingsMonochromePreview
+import sh.packit.compose.components.SettingsPreviewItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.icons.size24dp.colors
 import sh.packit.compose.icons.size24dp.restartAlt
+import sh.packit.compose.icons.size28dp.titlecase
 import sh.packit.compose.utils.FontHelper
 import sh.packit.compose.utils.LoadedFont
 import sh.packit.compose.utils.LocalMonochromeIcons
@@ -138,11 +143,8 @@ fun AppearanceScreen(
     val selectedFontFamily: FontFamily = remember(selectedFontName, fonts) {
         FontHelper.getFontFamily(selectedFontName, fonts)
     }
-    val fontOptions: Map<String, String> = remember(fonts) {
-        fonts.associate { it.name to it.displayName }
-    }
-    val fontFamilies: Map<String, FontFamily> = remember(fonts) {
-        fonts.associate { it.name to it.fontFamily }
+    val fontSelectorOptions: List<SelectorOption> = remember(fonts) {
+        FontHelper.buildSelectorOptions(fonts)
     }
     val iconStyleOptions: Map<String, String> = remember(strings) {
         mapOf(
@@ -178,8 +180,7 @@ fun AppearanceScreen(
                         isDark = isDark,
                         selectedFontName = selectedFontName,
                         currentFontSize = currentFontSize,
-                        fontOptions = fontOptions,
-                        fontFamilies = fontFamilies,
+                        fontSelectorOptions = fontSelectorOptions,
                         onFontChange = { newFont ->
                             selectedFontName = newFont
                             onAction?.invoke("font:$newFont")
@@ -201,6 +202,7 @@ fun AppearanceScreen(
                         strings = strings,
                         isDark = isDark,
                         selectedIconStyle = selectedIconStyle,
+                        isMonochrome = isMonochrome,
                         iconStyleOptions = iconStyleOptions,
                         onIconStyleChange = { newStyle ->
                             selectedIconStyle = newStyle
@@ -220,8 +222,7 @@ private fun FontSection(
     isDark: Boolean,
     selectedFontName: String,
     currentFontSize: Float,
-    fontOptions: Map<String, String>,
-    fontFamilies: Map<String, FontFamily>,
+    fontSelectorOptions: List<SelectorOption>,
     onFontChange: (String) -> Unit,
     onFontSizeChange: (Float) -> Unit,
     onReset: () -> Unit
@@ -234,9 +235,8 @@ private fun FontSection(
             settingKey = FontHelper.KEY_FONT_NAME,
             selectedKey = selectedFontName,
             defaultKey = FontHelper.DEFAULT_FONT_NAME,
-            options = fontOptions,
-            optionsFonts = fontFamilies,
-            iconName = "msg_theme",
+            selectorOptions = fontSelectorOptions,
+            imageVector = titlecase,
             iconColors = ExpressivePalette.categoryColors("appearance", isDark),
             shape = expressiveShapeFor(0, 3),
             onSelectionChanged = onFontChange
@@ -272,6 +272,7 @@ private fun MiscSection(
     strings: Strings,
     isDark: Boolean,
     selectedIconStyle: String,
+    isMonochrome: Boolean,
     iconStyleOptions: Map<String, String>,
     onIconStyleChange: (String) -> Unit
 ) {
@@ -284,10 +285,18 @@ private fun MiscSection(
             selectedKey = selectedIconStyle,
             defaultKey = ThemeHelper.DEFAULT_MONOCHROME_ICONS,
             options = iconStyleOptions,
-            iconName = "msg_palette",
+            imageVector = colors,
             iconColors = ExpressivePalette.categoryColors("appearance", isDark),
-            shape = expressiveShapeFor(0, 1),
+            shape = expressiveShapeFor(0, 2),
             onSelectionChanged = onIconStyleChange
         )
+        SettingsPreviewItem(
+            shape = expressiveShapeFor(1, 2)
+        ) {
+            SettingsMonochromePreview(
+                isDark = isDark,
+                isMonochrome = isMonochrome
+            )
+        }
     }
 }

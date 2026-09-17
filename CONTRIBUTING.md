@@ -225,4 +225,35 @@ val result = callAttr.invoke(module, *arrayOf<Any?>("functionName", args))
     - **In Python**: `packutil.paths` or `cruel` (`get_assets_dir()`, `get_source_dir()`, etc.).
     - **In Kotlin**: `sh.packit.core.utils.Paths` or `de.shareui.exterasdk.cruel.PluginPaths`.
 
+---
+
+## 5. Compose Icons Guidelines
+
+All Jetpack Compose icons in PackIt should primarily be vector icons obtained from [Google Fonts Material Symbols Outlined](https://fonts.google.com/icons?icon.size=24&icon.color=%23e3e3e3&icon.platform=android&icon.set=Material+Symbols&icon.style=Outlined), or from other platforms/sources as long as they seamlessly match and do not deviate from the Material Symbols Outlined visual style.
+
+### Organization and Structure
+
+- **Directory location**: `PackIt/src/kotlin/sh/packit/compose/icons/`
+- **Subdirectories by size (dp)**: Sort icons into subdirectories named after their optical size:
+  - `size20dp/`
+  - `size24dp/`
+  - `size28dp/`
+- **File naming**: Icon file names must always use **`PascalCase`** (e.g. `Titlecase.kt`, `Colors.kt`, `ContractEdit.kt`, `History.kt`).
+- **Package name**: Must match the directory: `package sh.packit.compose.icons.size<N>dp` (e.g. `package sh.packit.compose.icons.size24dp`).
+- **Property naming**: Provide the base property name matching Google Fonts naming and an alias in `camelCase` (e.g. `public val contractEdit: ImageVector get() = contract_edit`).
+
+### Downloading via curl
+
+To download an icon from Google Fonts and adjust the package automatically:
+
+```bash
+# Example for 24dp icon:
+curl -s --compressed "https://fonts.gstatic.com/render/v1/Material+Symbols+Outlined/24dp/<icon_name>.kt?var=opsz,wght,FILL,GRAD,ROND@24,400,0,0,50" \
+  | sed 's/package com.example.test/package sh.packit.compose.icons.size24dp/' \
+  > PackIt/src/kotlin/sh/packit/compose/icons/size24dp/<IconName>.kt
+```
+
+For other sizes (e.g. 28dp), adjust both the URL path (`/28dp/`) and opsz parameter (`@28,400,0,0,50`), as well as the destination package and folder.
+
+
 

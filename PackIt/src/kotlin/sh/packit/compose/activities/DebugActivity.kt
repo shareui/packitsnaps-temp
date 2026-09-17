@@ -24,6 +24,8 @@ import sh.packit.compose.components.SettingsFooter
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.SettingsSwitchItem
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.icons.size24dp.contractEdit
+import sh.packit.compose.icons.size24dp.history
 import sh.packit.compose.utils.PackItTheme
 import sh.packit.compose.utils.rememberScreenScrollState
 import sh.packit.core.state.CoreState
@@ -136,7 +138,7 @@ private fun DebugLoggingSection(
             subtitle = strings.get("debug_logs_desc", "Informational logs will be displayed"),
             settingKey = "debug_logs",
             default = true,
-            iconName = "msg_log",
+            imageVector = contractEdit,
             iconColors = ExpressivePalette.categoryColors("debug", isDark),
             shape = expressiveShapeFor(0, 2),
             onSwitch = { enabled ->
@@ -150,7 +152,7 @@ private fun DebugLoggingSection(
             subtitle = strings.get("log_history_desc", "Duplicates logs to a file on the device"),
             settingKey = "write_logs",
             default = false,
-            iconName = "msg_edit",
+            imageVector = history,
             iconColors = ExpressivePalette.categoryColors("debug", isDark),
             shape = expressiveShapeFor(1, 2),
             onSwitch = { enabled ->
