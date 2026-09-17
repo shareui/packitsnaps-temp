@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,7 @@ fun SettingsItem(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    imageVector: ImageVector? = null,
     iconName: String? = null,
     iconRes: Int? = null,
     iconColors: Pair<Color, Color> = TelegramColors.DEFAULT_PLUGINSETTINGS_BG to TelegramColors.windowBackgroundWhiteBlueIcon,
@@ -49,6 +52,7 @@ fun SettingsItem(
     val effectiveColors: Pair<Color, Color> = if (isMonochrome) ExpressivePalette.monochromeColors() else iconColors
 
     val iconPainter: Painter? = when {
+        imageVector != null -> rememberVectorPainter(imageVector)
         iconName != null -> rememberTelegramPainter(iconName)
         iconRes != null && iconRes != 0 -> rememberTelegramPainter(iconRes)
         else -> null

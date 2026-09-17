@@ -25,6 +25,19 @@ import sh.packit.compose.components.SettingsHeader
 import sh.packit.compose.components.SettingsItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.icons.size24dp.accountCircle
+import sh.packit.compose.icons.size24dp.addReaction
+import sh.packit.compose.icons.size24dp.build
+import sh.packit.compose.icons.size24dp.chat
+import sh.packit.compose.icons.size24dp.database
+import sh.packit.compose.icons.size24dp.extension
+import sh.packit.compose.icons.size24dp.forum
+import sh.packit.compose.icons.size24dp.github
+import sh.packit.compose.icons.size24dp.groups
+import sh.packit.compose.icons.size24dp.help
+import sh.packit.compose.icons.size24dp.link2
+import sh.packit.compose.icons.size24dp.settings
+import sh.packit.compose.icons.size24dp.sync
 import sh.packit.compose.utils.ScrollHelper
 import sh.packit.compose.utils.rememberScreenScrollState
 import sh.packit.core.bridge.NavigationBridge
@@ -95,7 +108,7 @@ private fun CategoriesSection(
         SettingsItem(
             title = strings.get("install_plugin", "Plugin Catalog"),
             subtitle = strings.get("install_plugin_sub", "Download extensions"),
-            iconName = "msg_download",
+            imageVector = extension,
             iconColors = ExpressivePalette.categoryColors("plugins", isDark),
             shape = expressiveShapeFor(0, 3),
             onClick = { onAction?.invoke("install_plugins") ?: BulletinHelper.showInfo("Coming soon") }
@@ -103,7 +116,7 @@ private fun CategoriesSection(
         SettingsItem(
             title = strings.get("install_icons", "Icon Catalog"),
             subtitle = strings.get("install_icons_sub", "Custom icon packs"),
-            iconName = "msg_smile_status",
+            imageVector = addReaction,
             iconColors = ExpressivePalette.categoryColors("icons", isDark),
             shape = expressiveShapeFor(1, 3),
             onClick = { onAction?.invoke("install_icons") ?: BulletinHelper.showInfo("Coming soon") }
@@ -111,7 +124,7 @@ private fun CategoriesSection(
         SettingsItem(
             title = strings.get("check_updates", "Check for Updates"),
             subtitle = strings.get("check_updates_sub", "Check for plugins updates"),
-            iconName = "msg_retry",
+            imageVector = sync,
             iconColors = ExpressivePalette.categoryColors("updates", isDark),
             shape = expressiveShapeFor(2, 3),
             onClick = { onAction?.invoke("check_updates") ?: BulletinHelper.showInfo("Checking updates...") }
@@ -131,35 +144,35 @@ private fun PreferencesSection(
     ExpressiveSettingsGroup {
         SettingsItem(
             title = strings.get("deeplinks", "Deeplinks"),
-            iconName = "msg_link",
+            imageVector = link2,
             iconColors = ExpressivePalette.categoryColors("deeplinks", isDark),
             shape = expressiveShapeFor(0, 5),
             onClick = { onAction?.invoke("deeplinks") ?: BulletinHelper.showInfo("Deeplinks") }
         )
         SettingsItem(
             title = strings.get("repositories", "Repositories"),
-            iconName = "msg_folders",
+            imageVector = database,
             iconColors = ExpressivePalette.categoryColors("repositories", isDark),
             shape = expressiveShapeFor(1, 5),
             onClick = { onAction?.invoke("repositories") ?: BulletinHelper.showInfo("Repositories") }
         )
         SettingsItem(
             title = strings.get("profile", "Profile"),
-            iconName = "msg_contacts",
+            imageVector = accountCircle,
             iconColors = ExpressivePalette.categoryColors("profile", isDark),
             shape = expressiveShapeFor(2, 5),
             onClick = { onAction?.invoke("profile") ?: BulletinHelper.showInfo("Profile") }
         )
         SettingsItem(
             title = strings.get("utilities", "Utilities"),
-            iconName = "msg_work",
+            imageVector = build,
             iconColors = ExpressivePalette.categoryColors("utilities", isDark),
             shape = expressiveShapeFor(3, 5),
             onClick = { onAction?.invoke("utilities") ?: BulletinHelper.showInfo("Utilities") }
         )
         SettingsItem(
             title = strings.get("other_settings", "Settings"),
-            iconName = "msg_settings",
+            imageVector = settings,
             iconColors = ExpressivePalette.categoryColors("settings", isDark),
             shape = expressiveShapeFor(4, 5),
             onClick = {
@@ -187,35 +200,35 @@ private fun CommunitySection(
     ExpressiveSettingsGroup {
         SettingsItem(
             title = strings.get("packit_channel", "PackIt Channel"),
-            iconName = "msg_channel",
+            imageVector = chat,
             iconColors = colors,
             shape = expressiveShapeFor(0, 5),
             onClick = { OpenUrl.openUrlInApp(context, NavigationBridge.URL_CHANNEL) }
         )
         SettingsItem(
             title = strings.get("packit_forum", "Packit Forum"),
-            iconName = "msg_groups",
+            imageVector = forum,
             iconColors = colors,
             shape = expressiveShapeFor(1, 5),
             onClick = { OpenUrl.openUrlInApp(context, NavigationBridge.URL_FORUM) }
         )
         SettingsItem(
             title = strings.get("source_code", "Source code"),
-            iconName = "msg_link",
+            imageVector = github,
             iconColors = colors,
             shape = expressiveShapeFor(2, 5),
             onClick = { OpenUrl.openUrlInBrowser(context, NavigationBridge.URL_SOURCE) }
         )
         SettingsItem(
             title = strings.get("links_docs", "Links & Documentation"),
-            iconName = "msg_help",
+            imageVector = help,
             iconColors = colors,
             shape = expressiveShapeFor(3, 5),
             onClick = { onAction?.invoke("docs") ?: BulletinHelper.showInfo("Documentation") }
         )
         SettingsItem(
             title = strings.get("contributors", "Contributors"),
-            iconName = "msg_contacts",
+            imageVector = groups,
             iconColors = colors,
             shape = expressiveShapeFor(4, 5),
             onClick = { onAction?.invoke("contributors") ?: BulletinHelper.showInfo("Contributors") }

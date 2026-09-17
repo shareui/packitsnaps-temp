@@ -26,6 +26,8 @@ import sh.packit.compose.components.SettingsFooter
 import sh.packit.compose.components.SettingsItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.icons.size24dp.developerModeTv
+import sh.packit.compose.icons.size24dp.palette
 import sh.packit.compose.utils.PackItTheme
 import sh.packit.compose.utils.ScrollHelper
 import sh.packit.compose.utils.rememberScreenScrollState
@@ -116,7 +118,7 @@ private fun NavigationSection(
         SettingsItem(
             title = strings.get("appearance", "Appearance"),
             subtitle = strings.get("appearance_sub", "PackIt styling settings"),
-            iconName = "msg_theme",
+            imageVector = palette,
             iconColors = ExpressivePalette.categoryColors("appearance", isDark),
             shape = expressiveShapeFor(0, 2),
             onClick = {
@@ -130,7 +132,7 @@ private fun NavigationSection(
         )
         SettingsItem(
             title = strings.get("debug_menu", "Debug menu"),
-            iconName = "msg_log",
+            imageVector = developerModeTv,
             iconColors = ExpressivePalette.categoryColors("debug", isDark),
             shape = expressiveShapeFor(1, 2),
             onClick = {

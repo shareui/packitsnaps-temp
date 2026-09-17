@@ -36,6 +36,7 @@ import sh.packit.compose.components.SettingsFooter
 import sh.packit.compose.components.SettingsItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.icons.size24dp.restartAlt
 import sh.packit.compose.utils.FontHelper
 import sh.packit.compose.utils.LoadedFont
 import sh.packit.compose.utils.LocalMonochromeIcons
@@ -256,7 +257,7 @@ private fun FontSection(
         SettingsItem(
             title = strings.get("reset", "Reset"),
             subtitle = strings.get("reset_font_desc", "Restore default font and size"),
-            iconName = "msg_retry",
+            imageVector = restartAlt,
             iconColors = ExpressivePalette.categoryColors("updates", isDark),
             shape = expressiveShapeFor(2, 3),
             mini = true,
