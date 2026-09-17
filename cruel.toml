@@ -3,7 +3,7 @@ title = "PackIt"
 description = "{plugin_description} [shareui/packit-source](https://github.com/shareui/packit-source)"
 id = "packit"
 version = "0.1.0"
-version_num = 91
+version_num = 92
 author = "@shareui"
 app_version = ">=12.10.1"
 sdk_version = ">=1.5.0.0"

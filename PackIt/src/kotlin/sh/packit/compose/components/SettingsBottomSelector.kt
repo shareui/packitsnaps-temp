@@ -1,7 +1,6 @@
 package sh.packit.compose.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,7 +94,7 @@ fun SettingsBottomSelector(
         color = TelegramColors.DEFAULT_PLUGINSETTINGS_CELL_BG,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 76.dp)
+            .heightIn(min = 64.dp)
             .expressiveBounce(targetScale = 0.98f, onClick = { showSheet = true })
     ) {
         SelectorItemContent(
@@ -151,13 +150,10 @@ private fun SelectorItemContent(
         }
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            SelectorTitleRow(
+                title = title,
+                selectedLabel = selectedLabel,
+                selectedFont = selectedFont
             )
             if (!subtitle.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -169,21 +165,51 @@ private fun SelectorItemContent(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Surface(
-                color = TelegramColors.DEFAULT_PLUGINSETTINGS_BG,
-                shape = CircleShape,
-                modifier = Modifier.align(Alignment.Start)
-            ) {
-                Text(
-                    text = selectedLabel,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TelegramColors.windowBackgroundWhiteBlueText,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = selectedFont ?: FontFamily.Default,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                )
-            }
+        }
+    }
+}
+
+@Composable
+private fun SelectorTitleRow(
+    title: String,
+    selectedLabel: String,
+    selectedFont: FontFamily?
+) {
+    val borderColor: Color = TelegramColors.DEFAULT_PLUGINSETTINGS_DIVIDER.takeIf { it != Color.Unspecified }
+        ?: MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = TelegramColors.DEFAULT_PLUGINSETTINGS_PRIMARY_TEXT,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = 200.dp)
+        )
+        Surface(
+            color = TelegramColors.DEFAULT_PLUGINSETTINGS_BG,
+            shape = CircleShape,
+            border = BorderStroke(width = 1.dp, color = borderColor),
+            modifier = Modifier
+                .weight(1f, fill = false)
+                .padding(start = 8.dp)
+        ) {
+            Text(
+                text = selectedLabel,
+                style = MaterialTheme.typography.labelMedium,
+                color = TelegramColors.windowBackgroundWhiteBlueText,
+                fontWeight = FontWeight.Bold,
+                fontFamily = selectedFont ?: FontFamily.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
         }
     }
 }
