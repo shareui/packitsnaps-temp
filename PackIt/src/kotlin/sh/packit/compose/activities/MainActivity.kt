@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -25,6 +25,8 @@ import sh.packit.compose.components.SettingsHeader
 import sh.packit.compose.components.SettingsItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
+import sh.packit.compose.utils.ScrollHelper
+import sh.packit.compose.utils.rememberScreenScrollState
 import sh.packit.core.bridge.NavigationBridge
 import sh.packit.core.state.CoreState
 import sh.packit.core.utils.OpenUrl
@@ -35,7 +37,7 @@ fun MainActivityScreen(
     onAction: ((String) -> Unit)? = null
 ) {
     val strings: Strings = Strings.of(CoreState.PLUGIN_ID)
-    val scrollState = rememberScrollState()
+    val scrollState: ScrollState = rememberScreenScrollState("main")
     val isDark: Boolean = TelegramThemeBridge.isDark || isSystemInDarkTheme()
     val context: Context = LocalContext.current
 
@@ -54,6 +56,7 @@ fun MainActivityScreen(
                 title = "PackIt",
                 subtitle = strings.get("plugin_subtitle", "Resource catalog for exteraGram"),
                 onStickerLongClick = {
+                    ScrollHelper.onNavigateForward("main")
                     if (onAction != null) {
                         onAction("debug_menu")
                     } else {
@@ -160,6 +163,7 @@ private fun PreferencesSection(
             iconColors = ExpressivePalette.categoryColors("settings", isDark),
             shape = expressiveShapeFor(4, 5),
             onClick = {
+                ScrollHelper.onNavigateForward("main")
                 if (onAction != null) {
                     onAction("other_settings")
                 } else {

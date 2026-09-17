@@ -3,21 +3,12 @@ import os
 import stat
 import threading
 from pathlib import Path
-from cruel import get_assets_dir
 from packutil import logx
+from packutil.paths import getAssetsDir, getCoreDexPath, getComposeDexPath, getDexPath
 
 _lock = threading.Lock()
 _coreLoader = None
 _loadedClasses = {}
-
-def getAssetsDir(pluginId: str = "packit") -> Path:
-    return get_assets_dir(pluginId)
-
-def getCoreDexPath(pluginId: str = "packit") -> Path:
-    return getAssetsDir(pluginId) / "Core.dex"
-
-def getComposeDexPath(pluginId: str = "packit") -> Path:
-    return getAssetsDir(pluginId) / "Compose.dex"
 
 def ensureReadOnly(dexPath: Path):
     # android 10+ forbids loading writable dex files

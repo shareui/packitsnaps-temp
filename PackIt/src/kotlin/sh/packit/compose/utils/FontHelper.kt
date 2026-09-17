@@ -7,9 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontFamily
 import de.shareui.composeshell.TelegramTheme
-import de.shareui.exterasdk.cruel.PluginPaths
 import de.shareui.exterasdk.settings.PluginSettings
 import sh.packit.core.state.CoreState
+import sh.packit.core.utils.Paths
 import java.io.File
 
 data class LoadedFont(
@@ -40,29 +40,19 @@ object FontHelper {
     }
 
     fun resolveAssetsDir(explicitDir: String?): String? {
-        if (!explicitDir.isNullOrEmpty()) return explicitDir
-        if (!CoreState.assetsDir.isNullOrEmpty()) return CoreState.assetsDir
-        return try {
-            PluginPaths.getAssetsDir(CoreState.PLUGIN_ID).absolutePath
-        } catch (_: Throwable) {
-            null
-        }
+        return Paths.getAssetsDir(CoreState.PLUGIN_ID, explicitDir)?.absolutePath
     }
 
     fun loadFonts(assetsDir: String?): List<LoadedFont> {
-        val resolved = resolveAssetsDir(assetsDir)
         val list = mutableListOf<LoadedFont>()
         list.add(LoadedFont(DEFAULT_FONT_NAME, "Default", FontFamily.Default))
-        if (!resolved.isNullOrEmpty()) {
-            val resolvedFile = File(resolved)
-            val fontsDir = if (resolvedFile.name == "fonts") resolvedFile else File(resolvedFile, "fonts")
-            if (fontsDir.exists() && fontsDir.isDirectory) {
-                fontsDir.listFiles()?.filter { it.name.contains("Regular") }?.forEach { file ->
-                    val rawName = file.name.substringBefore("-").replace(".ttf", "")
-                    val family = loadFontFamilyFromFile(file)
-                    if (family != null) {
-                        list.add(LoadedFont(rawName, formatDisplayName(rawName), family))
-                    }
+        val fontsDir: File? = Paths.getFontsDir(CoreState.PLUGIN_ID, assetsDir)
+        if (fontsDir != null && fontsDir.exists() && fontsDir.isDirectory) {
+            fontsDir.listFiles()?.filter { it.name.contains("Regular") }?.forEach { file ->
+                val rawName = file.name.substringBefore("-").replace(".ttf", "")
+                val family = loadFontFamilyFromFile(file)
+                if (family != null) {
+                    list.add(LoadedFont(rawName, formatDisplayName(rawName), family))
                 }
             }
         }

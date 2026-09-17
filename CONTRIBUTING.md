@@ -215,11 +215,14 @@ val result = callAttr.invoke(module, *arrayOf<Any?>("functionName", args))
 
 ---
 
-## 4. File Paths and Cruel SDK Functions
+## 4. File Paths and Path Helper Functions
 
-- **NEVER hardcode filesystem paths** (e.g. `/data/user/0/...`, `/data/data/...`).
-- Always use the official path resolution functions provided by `cruel`:
-  - **In Kotlin**: use `de.shareui.exterasdk.cruel.PluginPaths` (e.g. `PluginPaths.getAssetsDir(pluginId)`, `PluginPaths.getSourceDir(pluginId)`, `PluginPaths.getPluginsDir()`).
-  - **In Python**: use `import cruel`.
+- **NEVER hardcode filesystem paths** (e.g. `/data/user/0/...`, `/data/data/...`, or manual string concatenations like `filesDir + "/packit/var/logs"`).
+- **Always use dedicated path helper functions** instead of building or hardcoding paths manually:
+  - **In Python**: import from `packutil.paths` (e.g. `getDexPath()`, `getCoreDexPath()`, `getComposeDexPath()`, `getPackitDir()`, `getPackitVarDir()`, `getLogsDir()`, `getHistoryDir()`, `getLatestLogPath()`, `getAssetsDir()`, `getConfigsDir()`, `getReposCacheDir()`, `getTempDir()`).
+  - **In Kotlin**: use `sh.packit.core.utils.Paths` (e.g. `Paths.getFontsDir()`, `Paths.getAssetsDir()`, `Paths.getLogsDir()`, `Paths.getHistoryDir()`, `Paths.getLatestLogFile()`, `Paths.getPluginSettingsFile()`, `Paths.getPackitDir()`, `Paths.getPackitVarDir()`).
+  - For base cruel plugin directories (`assets`, `source`, `strings`, `wheels`), use the cruel SDK functions or their wrappers:
+    - **In Python**: `packutil.paths` or `cruel` (`get_assets_dir()`, `get_source_dir()`, etc.).
+    - **In Kotlin**: `sh.packit.core.utils.Paths` or `de.shareui.exterasdk.cruel.PluginPaths`.
 
 

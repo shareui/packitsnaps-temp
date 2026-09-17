@@ -6,7 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -27,6 +27,8 @@ import sh.packit.compose.components.SettingsItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
 import sh.packit.compose.utils.PackItTheme
+import sh.packit.compose.utils.ScrollHelper
+import sh.packit.compose.utils.rememberScreenScrollState
 import sh.packit.core.state.CoreState
 import sh.packit.core.utils.Logx
 import java.lang.reflect.Method
@@ -82,7 +84,7 @@ fun SettingsScreen(
     onAction: ((String) -> Unit)? = null
 ) {
     val strings: Strings = Strings.of(CoreState.PLUGIN_ID)
-    val scrollState = rememberScrollState()
+    val scrollState: ScrollState = rememberScreenScrollState("settings")
     val isDark: Boolean = TelegramThemeBridge.isDark || isSystemInDarkTheme()
 
     Surface(
@@ -118,6 +120,7 @@ private fun NavigationSection(
             iconColors = ExpressivePalette.categoryColors("appearance", isDark),
             shape = expressiveShapeFor(0, 2),
             onClick = {
+                ScrollHelper.onNavigateForward("settings")
                 if (onAction != null) {
                     onAction("appearance")
                 } else {
@@ -131,6 +134,7 @@ private fun NavigationSection(
             iconColors = ExpressivePalette.categoryColors("debug", isDark),
             shape = expressiveShapeFor(1, 2),
             onClick = {
+                ScrollHelper.onNavigateForward("settings")
                 if (onAction != null) {
                     onAction("debug_menu")
                 } else {

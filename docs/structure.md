@@ -8,6 +8,7 @@
 - `PackIt/src/kotlin/sh/packit/core/bridge/NavigationBridge.kt` - URL navigation constants and bridge
 - `PackIt/src/kotlin/sh/packit/core/utils/OpenUrl.kt` - in-app and browser URL openers
 - `PackIt/src/kotlin/sh/packit/core/utils/Logx.kt` - unified logger with FileLog fallback
+- `PackIt/src/kotlin/sh/packit/core/utils/Paths.kt` - Kotlin filesystem paths (fontsDir, assetsDir, packitDir, logsDir, pluginSettingsFile)
 - `PackIt/src/kotlin/sh/packit/core/state/CoreState.kt` - state flags and plugin version resolution
 - `PackIt/src/kotlin/sh/packit/core/ui/RestartRequired.kt` - restart bulletin notification
 
@@ -18,7 +19,7 @@
 - `PackIt/src/kotlin/sh/packit/compose/activities/DebugActivity.kt` - debug menu activity and screen (debug_logs switch)
 - `PackIt/src/kotlin/sh/packit/compose/activities/AppearanceActivity.kt` - appearance screen (font selector, size slider, reset)
 - `PackIt/src/kotlin/sh/packit/compose/components/` - UI components (stickers, items, switches with M3/PixelPlayer contrast, selectors, sliders, headers, footers, groups, bounce animations)
-- `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper)
+- `PackIt/src/kotlin/sh/packit/compose/utils/` - Compose utilities (drawables, FontHelper, ScrollHelper with rememberScreenScrollState)
 
 ### Compile-time Stubs (`PackIt/src/kotlin/stubs/`)
 - `PackIt/src/kotlin/stubs/org/telegram/` - Telegram client APIs
@@ -30,6 +31,10 @@
 - `PackIt/src/python/Main.py` - background init and startup checks
 - `PackIt/src/python/core/DexLoader.py` - Core.dex loader and cross-dex reflection utilities
 - `PackIt/src/python/ui/activities/PluginSettings.py` - opens ComposeFragment with CoreLoader chaining
+
+### Shared Wheel (`PackIt/src/wheels/packutil/` -> `packutil.whl`)
+- `PackIt/src/wheels/packutil/package/paths.py` - Python path utilities (getDexPath, getPackitDir, getPackitVarDir, getLogsDir, getAssetsDir, getConfigsDir, etc.)
+- `PackIt/src/wheels/packutil/package/logx.py` - unified logger implementation with logx
 
 ## 3. Build & Tools
 - `tools/compile/` - Gradle project compiling Compose Kotlin sources to DEX

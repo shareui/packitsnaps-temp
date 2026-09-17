@@ -51,6 +51,7 @@ object ComposeEntry {
                                 val strings: Strings = Strings.of(CoreState.PLUGIN_ID)
                                 when (action) {
                                     "appearance" -> {
+                                        sh.packit.compose.utils.ScrollHelper.onNavigateForward("main")
                                         val title: String = strings.get("appearance", "Appearance")
                                         val opened: Boolean = AppearanceActivity.open(context, title)
                                         if (!opened) {
@@ -58,6 +59,7 @@ object ComposeEntry {
                                         }
                                     }
                                     "debug_menu", "debug" -> {
+                                        sh.packit.compose.utils.ScrollHelper.onNavigateForward("main")
                                         val title: String = strings.get("debug_menu", "Debug menu")
                                         val opened: Boolean = DebugActivity.open(context, title)
                                         if (!opened) {
@@ -65,6 +67,7 @@ object ComposeEntry {
                                         }
                                     }
                                     "other_settings", "settings" -> {
+                                        sh.packit.compose.utils.ScrollHelper.onNavigateForward("main")
                                         val title: String = strings.get("other_settings", "Settings")
                                         val opened: Boolean = SettingsActivity.open(context, title)
                                         if (!opened) {

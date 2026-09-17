@@ -1,10 +1,8 @@
 package sh.packit.core.utils
 
-import android.content.Context
 import android.util.Log
 import de.shareui.exterasdk.utils.AndroidUtils
 import org.json.JSONObject
-import org.telegram.messenger.ApplicationLoader
 import java.io.File
 import java.io.FileOutputStream
 import java.nio.channels.FileLock
@@ -26,37 +24,13 @@ object Logx {
         reloadConfig()
     }
 
-    private fun getContext(): Context? {
-        return try {
-            ApplicationLoader.applicationContext
-        } catch (e: Throwable) {
-            Log.d(TAG, "failed to get ApplicationLoader context: $e")
-            null
-        }
-    }
-
-    private fun getFilesDir(): String? {
-        val ctx: Context = getContext() ?: return null
-        return ctx.filesDir.absolutePath
-    }
-
-    private fun getPluginsDir(): String? {
-        val filesDir: String = getFilesDir() ?: return null
-        return "$filesDir/plugins"
-    }
-
-    private fun getLogsDir(): File? {
-        val filesDir: String = getFilesDir() ?: return null
-        return File(filesDir, "packit/var/logs")
-    }
-
     @JvmStatic
     fun initLogSession(force: Boolean = false): File? {
         if (!force) {
             activeLogFile?.let { return it }
         }
-        val logsDir: File = getLogsDir() ?: return null
-        val historyDir = File(logsDir, "history")
+        val logsDir: File = Paths.getLogsDir() ?: return null
+        val historyDir: File = Paths.getHistoryDir() ?: return null
         if (!historyDir.exists()) {
             historyDir.mkdirs()
         }
@@ -69,7 +43,7 @@ object Logx {
         } catch (e: Throwable) {
             AndroidUtils.log("[packit] failed to create history file: $e")
         }
-        val latestFile = File(logsDir, "latest.txt")
+        val latestFile: File = Paths.getLatestLogFile() ?: sessionFile
         try {
             android.system.Os.remove(latestFile.absolutePath)
         } catch (e: Throwable) {
@@ -87,9 +61,8 @@ object Logx {
 
     private fun getLogFile(): File? {
         activeLogFile?.let { return it }
-        val logsDir: File = getLogsDir() ?: return null
-        val latestFile = File(logsDir, "latest.txt")
-        if (latestFile.exists()) {
+        val latestFile: File? = Paths.getLatestLogFile()
+        if (latestFile != null && latestFile.exists()) {
             activeLogFile = latestFile
             return latestFile
         }
@@ -98,9 +71,8 @@ object Logx {
 
     @JvmStatic
     fun reloadConfig() {
-        val pluginsDir: String = getPluginsDir() ?: return
+        val file: File = Paths.getPluginSettingsFile() ?: return
         try {
-            val file = File(pluginsDir, "plugin_settings.json")
             if (!file.exists()) {
                 isDebugEnabled = true
                 isWriteLogsEnabled = false

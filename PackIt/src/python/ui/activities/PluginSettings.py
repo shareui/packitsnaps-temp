@@ -1,6 +1,7 @@
 from packutil import logx
 from ui.bulletin import BulletinHelper
-from ...core.DexLoader import getComposeDexPath, getCoreLoader, ensureReadOnly, getAssetsDir
+from packutil.paths import getComposeDexPath, getAssetsDir
+from ...core.DexLoader import getCoreLoader, ensureReadOnly
 
 __all__ = ["openSettingsScreen", "openSubSettingsScreen", "openDebugScreen", "openAppearanceScreen", "updateLogConfig"]
 

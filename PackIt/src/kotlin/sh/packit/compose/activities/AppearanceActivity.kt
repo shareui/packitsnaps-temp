@@ -6,7 +6,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,6 +37,7 @@ import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
 import sh.packit.compose.utils.FontHelper
 import sh.packit.compose.utils.LoadedFont
+import sh.packit.compose.utils.rememberScreenScrollState
 import sh.packit.core.state.CoreState
 import sh.packit.core.utils.Logx
 import java.lang.reflect.Method
@@ -99,7 +100,7 @@ fun AppearanceScreen(
     onAction: ((String) -> Unit)? = null
 ) {
     val strings: Strings = Strings.of(CoreState.PLUGIN_ID)
-    val scrollState = rememberScrollState()
+    val scrollState: ScrollState = rememberScreenScrollState("appearance")
     val isDark: Boolean = TelegramThemeBridge.isDark || isSystemInDarkTheme()
 
     val resolvedAssetsDir: String? = assetsDir ?: CoreState.assetsDir
