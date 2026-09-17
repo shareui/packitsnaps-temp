@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.shareui.composeshell.TelegramColors
 import de.shareui.exterasdk.settings.PluginSettings
+import sh.packit.compose.utils.LocalMonochromeIcons
 import sh.packit.compose.utils.rememberTelegramPainter
 import sh.packit.core.state.CoreState
 
@@ -53,6 +54,9 @@ fun SettingsDottedSlider(
     onValueChange: ((Float) -> Unit)? = null,
     onValueChangeFinished: ((Float) -> Unit)? = null
 ) {
+    val isMonochrome: Boolean = LocalMonochromeIcons.current
+    val effectiveColors: Pair<Color, Color> = if (isMonochrome) ExpressivePalette.monochromeColors() else iconColors
+
     val initialValue: Float = remember(settingKey, pluginId, defaultValue) {
         if (!settingKey.isNullOrEmpty()) {
             val raw: Any? = PluginSettings.getSetting(pluginId, settingKey, defaultValue)
@@ -89,7 +93,7 @@ fun SettingsDottedSlider(
                 subtitle = subtitle,
                 valueText = valueText(currentValue),
                 iconPainter = iconPainter,
-                iconColors = iconColors
+                iconColors = effectiveColors
             )
             Spacer(modifier = Modifier.height(10.dp))
             SliderControl(

@@ -4,6 +4,7 @@ import android.graphics.Typeface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontFamily
 import de.shareui.composeshell.TelegramTheme
@@ -116,6 +117,12 @@ fun PackItTheme(
     val fontFamily: FontFamily = remember(savedFontName, fonts) {
         FontHelper.getFontFamily(savedFontName, fonts)
     }
+    val savedIconStyle: String = remember {
+        PluginSettings.getSetting(CoreState.PLUGIN_ID, ThemeHelper.KEY_MONOCHROME_ICONS, ThemeHelper.DEFAULT_MONOCHROME_ICONS)
+    }
+    val isMonochrome: Boolean = remember(savedIconStyle) {
+        ThemeHelper.resolveIsMonochrome(savedIconStyle)
+    }
 
     TelegramTheme {
         val baseTypography: Typography = MaterialTheme.typography
@@ -126,10 +133,12 @@ fun PackItTheme(
                 scale = savedFontSize / FontHelper.DEFAULT_FONT_SIZE
             )
         }
-        MaterialTheme(
-            colorScheme = MaterialTheme.colorScheme,
-            typography = customTypography,
-            content = content
-        )
+        CompositionLocalProvider(LocalMonochromeIcons provides isMonochrome) {
+            MaterialTheme(
+                colorScheme = MaterialTheme.colorScheme,
+                typography = customTypography,
+                content = content
+            )
+        }
     }
 }

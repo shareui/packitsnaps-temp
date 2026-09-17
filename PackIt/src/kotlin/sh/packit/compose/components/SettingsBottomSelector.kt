@@ -43,6 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.shareui.composeshell.TelegramColors
 import de.shareui.exterasdk.settings.PluginSettings
+import sh.packit.compose.icons.size20dp.check
+import sh.packit.compose.utils.LocalMonochromeIcons
 import sh.packit.compose.utils.rememberTelegramPainter
 import sh.packit.core.state.CoreState
 
@@ -64,6 +66,9 @@ fun SettingsBottomSelector(
     shape: Shape = RoundedCornerShape(24.dp),
     onSelectionChanged: ((String) -> Unit)? = null
 ) {
+    val isMonochrome: Boolean = LocalMonochromeIcons.current
+    val effectiveColors: Pair<Color, Color> = if (isMonochrome) ExpressivePalette.monochromeColors() else iconColors
+
     val initialKey: String = remember(settingKey, pluginId, defaultKey) {
         if (!settingKey.isNullOrEmpty()) {
             PluginSettings.getSetting(pluginId, settingKey, defaultKey)
@@ -103,7 +108,7 @@ fun SettingsBottomSelector(
             selectedLabel = options[currentKey] ?: currentKey,
             selectedFont = optionsFonts?.get(currentKey),
             iconPainter = iconPainter,
-            iconColors = iconColors
+            iconColors = effectiveColors
         )
     }
 
@@ -304,7 +309,7 @@ private fun SelectorOptionRow(
             )
             if (isSelected) {
                 Icon(
-                    imageVector = SelectorCheckIcon,
+                    imageVector = check,
                     contentDescription = null,
                     tint = contentColor,
                     modifier = Modifier.size(20.dp)
@@ -312,22 +317,4 @@ private fun SelectorOptionRow(
             }
         }
     }
-}
-
-private val SelectorCheckIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "SelectorCheck",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).path(fill = SolidColor(Color.White)) {
-        moveTo(9.0f, 16.17f)
-        lineTo(4.83f, 12.0f)
-        lineTo(3.41f, 13.41f)
-        lineTo(9.0f, 19.0f)
-        lineTo(21.0f, 7.0f)
-        lineTo(19.59f, 5.59f)
-        close()
-    }.build()
 }

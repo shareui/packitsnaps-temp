@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.shareui.composeshell.TelegramColors
+import sh.packit.compose.utils.LocalMonochromeIcons
 import sh.packit.compose.utils.rememberTelegramPainter
 
 @Composable
@@ -44,6 +45,9 @@ fun SettingsItem(
     mini: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
+    val isMonochrome: Boolean = LocalMonochromeIcons.current
+    val effectiveColors: Pair<Color, Color> = if (isMonochrome) ExpressivePalette.monochromeColors() else iconColors
+
     val iconPainter: Painter? = when {
         iconName != null -> rememberTelegramPainter(iconName)
         iconRes != null && iconRes != 0 -> rememberTelegramPainter(iconRes)
@@ -69,14 +73,14 @@ fun SettingsItem(
                     ItemLeadingIcon(
                         painter = iconPainter,
                         contentDescription = title,
-                        tintColor = iconColors.second.takeIf { it != Color.Unspecified } ?: TelegramColors.windowBackgroundWhiteBlueIcon
+                        tintColor = effectiveColors.second.takeIf { it != Color.Unspecified } ?: TelegramColors.windowBackgroundWhiteBlueIcon
                     )
                 } else {
                     ItemIconBadge(
                         painter = iconPainter,
                         contentDescription = title,
-                        containerColor = iconColors.first,
-                        tintColor = iconColors.second
+                        containerColor = effectiveColors.first,
+                        tintColor = effectiveColors.second
                     )
                 }
                 Spacer(modifier = Modifier.width(16.dp))

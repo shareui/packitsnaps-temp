@@ -1,9 +1,21 @@
 package sh.packit.compose.components
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import de.shareui.composeshell.TelegramColors
+import sh.packit.compose.utils.LocalMonochromeIcons
 
 object ExpressivePalette {
+    @Composable
     fun categoryColors(key: String, isDark: Boolean): Pair<Color, Color> {
+        val isMonochrome: Boolean = LocalMonochromeIcons.current
+        return categoryColors(key, isDark, isMonochrome)
+    }
+
+    fun categoryColors(key: String, isDark: Boolean, isMonochrome: Boolean): Pair<Color, Color> {
+        if (isMonochrome) {
+            return monochromeColors()
+        }
         return if (isDark) {
             when (key) {
                 "plugins" -> Color(0xFF004A77) to Color(0xFFC2E7FF)
@@ -33,5 +45,13 @@ object ExpressivePalette {
                 else -> Color(0xFFD7E3FF) to Color(0xFF005AC1)
             }
         }
+    }
+
+    fun monochromeColors(): Pair<Color, Color> {
+        val container: Color = TelegramColors.DEFAULT_PLUGINSETTINGS_BG.takeIf { it != Color.Unspecified }
+            ?: TelegramColors.windowBackgroundWhiteGrayIcon.copy(alpha = 0.12f)
+        val tint: Color = TelegramColors.windowBackgroundWhiteGrayIcon.takeIf { it != Color.Unspecified }
+            ?: Color(0xFF828E99)
+        return container to tint
     }
 }

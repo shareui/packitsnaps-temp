@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.shareui.composeshell.TelegramColors
 import de.shareui.exterasdk.settings.PluginSettings
+import sh.packit.compose.utils.LocalMonochromeIcons
 import sh.packit.compose.utils.rememberTelegramPainter
 import sh.packit.core.state.CoreState
 
@@ -61,6 +62,9 @@ fun SettingsSwitchItem(
     shape: Shape = RoundedCornerShape(24.dp),
     onSwitch: ((Boolean) -> Unit)? = null
 ) {
+    val isMonochrome: Boolean = LocalMonochromeIcons.current
+    val effectiveColors: Pair<Color, Color> = if (isMonochrome) ExpressivePalette.monochromeColors() else iconColors
+
     val initialValue: Boolean = remember(settingKey, pluginId, default) {
         if (!settingKey.isNullOrEmpty()) {
             PluginSettings.getSetting(pluginId, settingKey, default)
@@ -109,7 +113,7 @@ fun SettingsSwitchItem(
                 ItemLeadingIcon(
                     painter = iconPainter,
                     contentDescription = title,
-                    tintColor = iconColors.second.takeIf { it != Color.Unspecified }
+                    tintColor = effectiveColors.second.takeIf { it != Color.Unspecified }
                         ?: TelegramColors.windowBackgroundWhiteBlueIcon
                 )
                 Spacer(modifier = Modifier.width(16.dp))
