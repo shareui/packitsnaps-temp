@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +41,7 @@ import sh.packit.compose.components.SettingsPreviewItem
 import sh.packit.compose.components.SettingsSectionTitle
 import sh.packit.compose.components.expressiveShapeFor
 import sh.packit.compose.icons.size24dp.colors
+import sh.packit.compose.icons.size24dp.globe
 import sh.packit.compose.icons.size24dp.restartAlt
 import sh.packit.compose.icons.size28dp.titlecase
 import sh.packit.compose.utils.FontHelper
@@ -140,17 +142,31 @@ fun AppearanceScreen(
         ThemeHelper.resolveIsMonochrome(selectedIconStyle)
     }
 
+    val savedLanguage: String = remember {
+        PluginSettings.getSetting(CoreState.PLUGIN_ID, Strings.KEY_LANGUAGE, "")
+    }
+    var selectedLanguage: String by remember { mutableStateOf(savedLanguage) }
+    var localeVersion: Int by remember { mutableIntStateOf(0) }
+
     val selectedFontFamily: FontFamily = remember(selectedFontName, fonts) {
         FontHelper.getFontFamily(selectedFontName, fonts)
     }
     val fontSelectorOptions: List<SelectorOption> = remember(fonts) {
         FontHelper.buildSelectorOptions(fonts)
     }
-    val iconStyleOptions: Map<String, String> = remember(strings) {
+    val iconStyleOptions: Map<String, String> = remember(strings, localeVersion) {
         mapOf(
             ThemeHelper.MODE_AUTO to strings.get("monochrome_auto", "Auto"),
             ThemeHelper.MODE_COLORED to strings.get("monochrome_colored", "Colored"),
             ThemeHelper.MODE_MONOCHROME to strings.get("monochrome_monochrome", "Monochrome")
+        )
+    }
+    val languageOptions: Map<String, String> = remember(strings, localeVersion) {
+        mapOf(
+            "" to strings.get("monochrome_auto", "Auto"),
+            "ru" to "Русский",
+            "en" to "English",
+            "de" to "Deutsch"
         )
     }
 
@@ -198,7 +214,7 @@ fun AppearanceScreen(
                             onAction?.invoke("reset")
                         }
                     )
-                    MiscSection(
+                    ColorsSection(
                         strings = strings,
                         isDark = isDark,
                         selectedIconStyle = selectedIconStyle,
@@ -207,6 +223,18 @@ fun AppearanceScreen(
                         onIconStyleChange = { newStyle ->
                             selectedIconStyle = newStyle
                             onAction?.invoke("iconStyle:$newStyle")
+                        }
+                    )
+                    PreferencesSection(
+                        strings = strings,
+                        isDark = isDark,
+                        selectedLanguage = selectedLanguage,
+                        languageOptions = languageOptions,
+                        onLanguageChange = { newLang ->
+                            selectedLanguage = newLang
+                            Strings.setLocale(CoreState.PLUGIN_ID, newLang, reloadPlugin = false)
+                            localeVersion++
+                            onAction?.invoke("language:$newLang")
                         }
                     )
                     SettingsFooter()
@@ -268,7 +296,7 @@ private fun FontSection(
 }
 
 @Composable
-private fun MiscSection(
+private fun ColorsSection(
     strings: Strings,
     isDark: Boolean,
     selectedIconStyle: String,
@@ -276,7 +304,7 @@ private fun MiscSection(
     iconStyleOptions: Map<String, String>,
     onIconStyleChange: (String) -> Unit
 ) {
-    SettingsSectionTitle(title = strings.get("misc_header", "Misc"))
+    SettingsSectionTitle(title = strings.get("colors_header", "Colors"))
     ExpressiveSettingsGroup {
         SettingsBottomSelector(
             title = strings.get("monochrome_icons", "Monochrome icons"),
@@ -298,5 +326,30 @@ private fun MiscSection(
                 isMonochrome = isMonochrome
             )
         }
+    }
+}
+
+@Composable
+private fun PreferencesSection(
+    strings: Strings,
+    isDark: Boolean,
+    selectedLanguage: String,
+    languageOptions: Map<String, String>,
+    onLanguageChange: (String) -> Unit
+) {
+    SettingsSectionTitle(title = strings.get("plugin_preferences_header", "Plugin preferences"))
+    ExpressiveSettingsGroup {
+        SettingsBottomSelector(
+            title = strings.get("plugin_lang", "Plugin lang"),
+            subtitle = strings.get("plugin_lang_desc", "Choose plugin display language"),
+            settingKey = Strings.KEY_LANGUAGE,
+            selectedKey = selectedLanguage,
+            defaultKey = "",
+            options = languageOptions,
+            imageVector = globe,
+            iconColors = ExpressivePalette.categoryColors("appearance", isDark),
+            shape = expressiveShapeFor(0, 1),
+            onSelectionChanged = onLanguageChange
+        )
     }
 }
